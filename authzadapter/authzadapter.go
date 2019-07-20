@@ -13,7 +13,8 @@ import (
 	"google.golang.org/grpc"
 
 	"istio.io/api/mixer/adapter/model/v1beta1"
-	"istio.io/istio/mixer/adapter/mygrpcadapter/config"
+	"istio.io/istio/mixer/adapter/authzadapter/config"
+	"istio.io/istio/mixer/pkg/status"
 	"istio.io/istio/mixer/template/authorization"
 )
 
@@ -38,8 +39,10 @@ var _ authorization.HandleAuthorizationServiceServer = &AuthzAdapter{}
 func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, r *authorization.HandleAuthorizationRequest) (*v1beta1.CheckResult, error) {
 	fmt.Printf("received request %v\n", *r)
 	cfg := &config.Params{}
-	fmt.Printf("configs: %v\n", cfg)
-	return nil, nil
+	fmt.Printf("pdpHost=%v, pdpPort=%v\n", cfg.pdpHost, cfg.pdpPort)
+	return &v1beta1.CheckResult{
+		Status: status.OK,
+	}, nil
 }
 
 // Addr returns the listening address of the server
