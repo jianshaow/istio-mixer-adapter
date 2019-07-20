@@ -1,3 +1,8 @@
+// nolint:lll
+// Generates the authzadapter adapter's resource yaml. It contains the adapter's configuration, name,
+// supported template names (metric in this case), and whether it is session or no-session based.
+//go:generate $GOPATH/src/istio.io/istio/bin/mixer_codegen.sh -a mixer/adapter/authzadapter/config/config.proto -x "-s=false -n authzadapter -t authorization"
+
 package authzadapter
 
 import (
@@ -30,6 +35,9 @@ var _ authorization.HandleAuthorizationServiceServer = &AuthzAdapter{}
 
 // HandleAuthorization handler the request
 func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, r *authorization.HandleAuthorizationRequest) (*v1beta1.ReportResult, error) {
+	fmt.Printf("received request %v\n", *r)
+	cfg := &config.Params{}
+	fmt.Printf("configs: %v\n", cfg)
 	return nil, nil
 }
 
