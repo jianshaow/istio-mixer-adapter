@@ -49,7 +49,8 @@ func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, r *authorization
 		}
 	}
 
-	fmt.Printf("PdpHost=%v, PdpPort=%v\n", cfg.PdpHost, cfg.PdpPort)
+	fmt.Printf("Config: %v\n", cfg)
+	fmt.Printf("Properties: %v\n", r.Instance.Subject.Properties)
 
 	return &v1beta1.CheckResult{
 		Status: status.OK,
