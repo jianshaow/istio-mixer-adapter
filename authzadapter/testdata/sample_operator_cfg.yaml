@@ -1,0 +1,41 @@
+# handler for adapter authzadapter
+apiVersion: "config.istio.io/v1alpha2"
+kind: handler
+metadata:
+  name: h1
+  namespace: istio-system
+spec:
+  adapter: authzadapter
+  connection:
+    address: "{ADDRESS}" #replaces at runtime by the test
+params:
+  pda_host: pdp-service
+  pdp_port: 8080
+---
+
+# instance for template authorization
+apiVersion: "config.istio.io/v1alpha2"
+kind: instance
+metadata:
+  name: icheck
+  namespace: istio-system
+spec:
+  template: authorization
+  params:
+    subject:
+      properties:
+        authorization_header:  request.headers["Authorization"]
+---
+
+# rule to dispatch to handler h1
+apiVersion: "config.istio.io/v1alpha2"
+kind: rule
+metadata:
+  name: r1
+  namespace: istio-system
+spec:
+  actions:
+  - handler: h1.istio-system
+    instances:
+    - icheck
+---

@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+// config for authzadapter
+package adapter.authzadapter.config;
+
+import "gogoproto/gogo.proto";
+
+option go_package="config";
+
+// config for authzadapter
+message Params {
+    // PDP host.
+    string pdp_host = 1;
+    // PDP port
+    int32 pdp_port =2;
+}
