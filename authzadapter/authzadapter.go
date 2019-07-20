@@ -16,6 +16,7 @@ import (
 	"istio.io/istio/mixer/adapter/authzadapter/config"
 	"istio.io/istio/mixer/pkg/status"
 	"istio.io/istio/mixer/template/authorization"
+	"istio.io/istio/pkg/log"
 )
 
 type (
@@ -37,9 +38,19 @@ var _ authorization.HandleAuthorizationServiceServer = &AuthzAdapter{}
 
 // HandleAuthorization handler the request
 func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, r *authorization.HandleAuthorizationRequest) (*v1beta1.CheckResult, error) {
-	fmt.Printf("received request %v\n", *r)
+	log.Infof("received request %v\n", *r)
+
 	cfg := &config.Params{}
-	fmt.Printf("pdpHost=%v, pdpPort=%v\n", cfg.pdpHost, cfg.pdpPort)
+
+	if r.AdapterConfig != nil {
+		if err := cfg.Unmarshal(r.AdapterConfig.Value); err != nil {
+			log.Errorf("error unmarshalling adapter config: %v", err)
+			return nil, err
+		}
+	}
+
+	fmt.Printf("PdpHost=%v, PdpPort=%v\n", cfg.PdpHost, cfg.PdpPort)
+
 	return &v1beta1.CheckResult{
 		Status: status.OK,
 	}, nil
@@ -68,7 +79,7 @@ func (s *AuthzAdapter) Close() error {
 	return nil
 }
 
-// NewAuthzAdapter creates a new IBP adapter that listens at provided port.
+// NewAuthzAdapter creates a new adapter that listens at provided port.
 func NewAuthzAdapter(addr string) (Server, error) {
 	if addr == "" {
 		addr = "0"
