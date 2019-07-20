@@ -16,7 +16,7 @@ import (
 	"istio.io/istio/mixer/adapter/authzadapter/config"
 	"istio.io/istio/mixer/pkg/status"
 	"istio.io/istio/mixer/template/authorization"
-	"istio.io/istio/pkg/log"
+	"istio.io/pkg/log"
 )
 
 type (
