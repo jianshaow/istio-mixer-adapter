@@ -34,7 +34,7 @@ type (
 var _ authorization.HandleAuthorizationServiceServer = &AuthzAdapter{}
 
 // HandleAuthorization handler the request
-func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, r *authorization.HandleAuthorizationRequest) (*v1beta1.ReportResult, error) {
+func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, r *authorization.HandleAuthorizationRequest) (*v1beta1.CheckResult, error) {
 	fmt.Printf("received request %v\n", *r)
 	cfg := &config.Params{}
 	fmt.Printf("configs: %v\n", cfg)
