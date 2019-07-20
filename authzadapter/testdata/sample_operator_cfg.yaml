@@ -8,9 +8,9 @@ spec:
   adapter: authzadapter
   connection:
     address: "{ADDRESS}" #replaces at runtime by the test
-params:
-  pda_host: pdp-service
-  pdp_port: 8080
+  params:
+    pda_host: pdp-service
+    pdp_port: 8080
 ---
 
 # instance for template authorization
@@ -24,7 +24,7 @@ spec:
   params:
     subject:
       properties:
-        authorization_header:  request.headers["Authorization"]
+        authorization_header: request.headers["Authorization"]
 ---
 
 # rule to dispatch to handler h1
