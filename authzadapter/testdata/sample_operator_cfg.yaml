@@ -9,7 +9,7 @@ spec:
   connection:
     address: "{ADDRESS}" #replaces at runtime by the test
   params:
-    pda_host: pdp-service
+    pdp_host: pdp-service
     pdp_port: 8080
 ---
 
