@@ -7,12 +7,15 @@ package authzadapter
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"net"
+	"strings"
 
 	"google.golang.org/grpc"
 
 	"istio.io/api/mixer/adapter/model/v1beta1"
+	policy "istio.io/api/policy/v1beta1"
 	"istio.io/istio/mixer/adapter/authzadapter/config"
 	"istio.io/istio/mixer/pkg/status"
 	"istio.io/istio/mixer/template/authorization"
@@ -49,8 +52,28 @@ func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, r *authorization
 		}
 	}
 
-	fmt.Printf("Config: %v\n", cfg)
-	fmt.Printf("Properties: %v\n", r.Instance.Subject.Properties)
+	log.Infof("Config: %v\n", cfg)
+
+	props := decodeValueMap(r.Instance.Subject.Properties)
+	log.Infof("AuthorizationHeader: %v\n", props["authorization_header"])
+
+	authzHeader := string(props["authorization_header"])
+
+	headerParts := strings.Split(authzHeader, " ")
+
+	authzType := headerParts[0]
+	authzContent := headerParts[1]
+	log.Infof("authzContent: %v\n", authzContent)
+
+	if authzType == "Basic"
+		decoded, _ := base64.StdEncoding.DecodeString(authzContent)
+		log.Infof("decoded: %v\n", decoded)
+		basicAuthzParts := strings.Split(string(decoded), ":")
+		clientID := basicAuthzParts[0]
+		clientSecret := basicAuthzParts[1]
+
+		log.Infof("clientID: %v\n", clientID)
+		log.Infof("clientSecret: %v\n", clientSecret)
 
 	return &v1beta1.CheckResult{
 		Status: status.OK,
@@ -96,4 +119,25 @@ func NewAuthzAdapter(addr string) (Server, error) {
 	s.server = grpc.NewServer()
 	authorization.RegisterHandleAuthorizationServiceServer(s.server, s)
 	return s, nil
+}
+
+func decodeValue(in interface{}) interface{} {
+	switch t := in.(type) {
+	case *policy.Value_StringValue:
+		return t.StringValue
+	case *policy.Value_Int64Value:
+		return t.Int64Value
+	case *policy.Value_DoubleValue:
+		return t.DoubleValue
+	default:
+		return fmt.Sprintf("%v", in)
+	}
+}
+
+func decodeValueMap(in map[string]*policy.Value) map[string]interface{} {
+	out := make(map[string]interface{}, len(in))
+	for k, v := range in {
+		out[k] = decodeValue(v.GetValue())
+	}
+	return out
 }
