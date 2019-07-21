@@ -57,7 +57,7 @@ func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, r *authorization
 	props := decodeValueMap(r.Instance.Subject.Properties)
 	log.Infof("AuthorizationHeader: %v\n", props["authorization_header"])
 
-	authzHeader := string(props["authorization_header"])
+	authzHeader := fmt.Sprintf("%v", props["authorization_header"])
 
 	headerParts := strings.Split(authzHeader, " ")
 
@@ -65,7 +65,7 @@ func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, r *authorization
 	authzContent := headerParts[1]
 	log.Infof("authzContent: %v\n", authzContent)
 
-	if authzType == "Basic"
+	if authzType == "Basic" {
 		decoded, _ := base64.StdEncoding.DecodeString(authzContent)
 		log.Infof("decoded: %v\n", decoded)
 		basicAuthzParts := strings.Split(string(decoded), ":")
@@ -74,6 +74,7 @@ func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, r *authorization
 
 		log.Infof("clientID: %v\n", clientID)
 		log.Infof("clientSecret: %v\n", clientSecret)
+	}
 
 	return &v1beta1.CheckResult{
 		Status: status.OK,
