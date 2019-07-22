@@ -32,7 +32,7 @@ $GOPATH/out/linux_amd64/release/mixs server --configStoreURL=fs://${MIXER_REPO}/
 $GOPATH/out/linux_amd64/release/mixc check -s destination.service.host="testservice.svc.cluster.local",destination.namespace="test-namespace",request.path="/test",request.method="GET" --stringmap_attributes "request.headers=Authorization:Basic dGVzdENsaWVudDpzZWNyZXQ="
 
 cd /tmp/istio-mixer-authz-adapter
-go build -o bin/authzadapter $MIXER_REPO/adapter/authzadapter/cmd/main.go
+CGO_ENABLED=0 GOOS=linux go build -a -v -o bin/authzadapter $MIXER_REPO/adapter/authzadapter/cmd/main.go
 
 docker build -t mymixeradapter/authzadapter:latest .
 
