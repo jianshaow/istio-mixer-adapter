@@ -57,7 +57,7 @@ func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, r *authorization
 	subjectProps := decodeValueMap(r.Instance.Subject.Properties)
 	log.Infof("AuthorizationHeader: %v\n", subjectProps["authorization_header"])
 
-	authzHeader := decodeValue(subjectProps["authorization_header"])
+	authzHeader := fmt.Sprintf("%v", subjectProps["authorization_header"])
 	headerParts := strings.Split(strings.TrimSpace(authzHeader), " ")
 
 	authzType := headerParts[0]
