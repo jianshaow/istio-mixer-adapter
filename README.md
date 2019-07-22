@@ -35,5 +35,10 @@ cd /tmp/istio-mixer-authz-adapter
 CGO_ENABLED=0 GOOS=linux go build -a -v -o bin/authzadapter $MIXER_REPO/adapter/authzadapter/cmd/main.go
 
 docker build -t mymixeradapter/authzadapter:latest .
+# in case no remote repository
+docker save -o authzadapter.tar mymixeradapter/authzadapter
+docker load -i authzadapter.tar
+
+kubectl -f authzadapter.yaml
 
 ~~~
