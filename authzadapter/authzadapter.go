@@ -75,7 +75,7 @@ func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, r *authorization
 		log.Infof("clientSecret: %v\n", clientSecret)
 	}
 
-	log.Infof("Action: %v\n", *(r.Instance.Action))
+	log.Infof("Action: %+v\n", *(r.Instance.Action))
 
 	return &v1beta1.CheckResult{
 		Status: status.OK,
