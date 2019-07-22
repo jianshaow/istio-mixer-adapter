@@ -2,7 +2,7 @@
 apiVersion: "config.istio.io/v1alpha2"
 kind: handler
 metadata:
-  name: h1
+  name: authzhandler
   namespace: istio-system
 spec:
   adapter: authzadapter
@@ -25,17 +25,22 @@ spec:
     subject:
       properties:
         authorization_header: request.headers["Authorization"]
+    action:
+      namespace: destination.namespace | "default"
+      service: destination.service.host | ""
+      path: request.path | "/"
+      method: request.method | "post"
 ---
 
-# rule to dispatch to handler h1
+# rule to dispatch to handler authzhandler
 apiVersion: "config.istio.io/v1alpha2"
 kind: rule
 metadata:
-  name: r1
+  name: authzrule
   namespace: istio-system
 spec:
   actions:
-  - handler: h1.istio-system
+  - handler: authzhandler.istio-system
     instances:
     - icheck
 ---
