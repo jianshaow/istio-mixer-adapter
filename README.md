@@ -39,6 +39,6 @@ docker build -t mymixeradapter/authzadapter:latest .
 docker save -o authzadapter.tar mymixeradapter/authzadapter
 docker load -i authzadapter.tar
 
-kubectl -f authzadapter.yaml
+kubectl apply -f authzadapter.yaml
 
 ~~~
