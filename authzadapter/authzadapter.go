@@ -66,7 +66,7 @@ func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, r *authorization
 
 	if authzType == "Basic" {
 		decoded, _ := base64.StdEncoding.DecodeString(authzContent)
-		log.Infof("decoded: %v\n", decoded)
+		log.Infof("decoded: %s\n", decoded)
 		basicAuthzParts := strings.Split(string(decoded), ":")
 		clientID := basicAuthzParts[0]
 		clientSecret := basicAuthzParts[1]
