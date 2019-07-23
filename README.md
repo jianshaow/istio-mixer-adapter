@@ -34,9 +34,10 @@ $GOPATH/out/linux_amd64/release/mixc check -s destination.service.host="testserv
 cd /tmp/istio-mixer-authz-adapter
 CGO_ENABLED=0 GOOS=linux go build -a -v -o bin/authzadapter $MIXER_REPO/adapter/authzadapter/cmd/main.go
 
-docker build -t mymixeradapter/authzadapter:latest .
-# in case no remote repository
-docker save -o authzadapter.tar mymixeradapter/authzadapter
+docker build -t mymixeradapter/authzadapter:1.0 .
+# in case the build docker is not the same with kubernetes cluster
+docker save -o authzadapter.tar mymixeradapter/authzadapter:1.0
+# load in the kubernetes cluster worker node
 docker load -i authzadapter.tar
 
 kubectl apply -f authzadapter.yaml

@@ -16,7 +16,7 @@ spec:
       restartPolicy: Always
       containers:
       - name: authn-server
-        image: mymixeradapter/authzadapter:latest
+        image: mymixeradapter/authzadapter:1.0
         ports:
         - containerPort: 45678
 
