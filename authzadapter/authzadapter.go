@@ -58,21 +58,25 @@ func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, r *authorization
 	log.Infof("AuthorizationHeader: %v\n", subjectProps["authorization_header"])
 
 	authzHeader := fmt.Sprintf("%v", subjectProps["authorization_header"])
-	headerParts := strings.Split(strings.TrimSpace(authzHeader), " ")
+	if authzHeader != "" {
+		headerParts := strings.Split(strings.TrimSpace(authzHeader), " ")
 
-	authzType := headerParts[0]
-	authzContent := headerParts[1]
-	log.Infof("authzContent: %v\n", authzContent)
+		if len(headerParts) >= 2 {
+			authzType := headerParts[0]
+			authzContent := headerParts[1]
+			log.Infof("authzContent: %v\n", authzContent)
 
-	if authzType == "Basic" {
-		decoded, _ := base64.StdEncoding.DecodeString(authzContent)
-		log.Infof("decoded: %s\n", decoded)
-		basicAuthzParts := strings.Split(string(decoded), ":")
-		clientID := basicAuthzParts[0]
-		clientSecret := basicAuthzParts[1]
+			if authzType == "Basic" {
+				decoded, _ := base64.StdEncoding.DecodeString(authzContent)
+				log.Infof("decoded: %s\n", decoded)
+				basicAuthzParts := strings.Split(string(decoded), ":")
+				clientID := basicAuthzParts[0]
+				clientSecret := basicAuthzParts[1]
 
-		log.Infof("clientID: %v\n", clientID)
-		log.Infof("clientSecret: %v\n", clientSecret)
+				log.Infof("clientID: %v\n", clientID)
+				log.Infof("clientSecret: %v\n", clientSecret)
+			}
+		}
 	}
 
 	log.Infof("Action: %+v\n", *(r.Instance.Action))
