@@ -17,6 +17,7 @@ pushd $ISTIO/istio && make mixs
 pushd $ISTIO/istio && make mixc
 
 cp /tmp/istio-mixer-authz-adapter/authzadapter $MIXER_REPO/adapter/ -r
+cd /tmp/istio-mixer-authz-adapter/
 
 go generate $MIXER_REPO/adapter/authzadapter/
 # go generate needs docker, may need root privilege, if so, GOPATH needs to be passed for sudo as following
@@ -24,6 +25,9 @@ go generate $MIXER_REPO/adapter/authzadapter/
 go build $MIXER_REPO/adapter/authzadapter/
 
 cp $MIXER_REPO/adapter/authzadapter/config/authzadapter.yaml $MIXER_REPO/adapter/authzadapter/testdata/
+
+export ADDRESS=[::]:45678
+sed -e "s/{ADDRESS}/${ADDRESS}/g" /tmp/istio-mixer-authz-adapter/sample_operator_cfg.yaml > $MIXER_REPO/adapter/authzadapter/testdata/sample_operator_cfg.yaml
 
 go run $MIXER_REPO/adapter/authzadapter/cmd/main.go 45678
 
@@ -37,12 +41,14 @@ cd /tmp/istio-mixer-authz-adapter
 CGO_ENABLED=0 GOOS=linux go build -a -v -o bin/authzadapter $MIXER_REPO/adapter/authzadapter/cmd/main.go
 
 docker build -t mymixeradapter/authzadapter:1.0 .
-# in case the build docker is not the same with kubernetes cluster
+# in case the build docker environment is not the same with kubernetes cluster, and you don't want to push the image to remote repository
 docker save -o authzadapter.tar mymixeradapter/authzadapter:1.0
 # switch to the docker environment of the kubernetes cluster worker node
 ...
 # load the image in the kubernetes cluster worker node
 docker load -i authzadapter.tar
+
+sed -e "s/{ADDRESS}/authzadapter-service/g" sample_operator_cfg.yaml > authzadapter/testdata/sample_operator_cfg.yaml
 
 kubectl apply -f authzadapter-deployment.yaml
 kubectl apply -f authzadapter/testdata/template.yaml

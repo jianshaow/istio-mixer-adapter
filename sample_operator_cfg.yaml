@@ -7,8 +7,7 @@ metadata:
 spec:
   adapter: authzadapter
   connection:
-    address: "[::]:45678"
-    #address: "authzadapter-service:45678"
+    address: "{ADDRESS}"
   params:
     pdp_host: pdp-service
     pdp_port: 8080
