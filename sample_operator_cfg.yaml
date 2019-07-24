@@ -41,6 +41,7 @@ metadata:
   name: authzrule
   namespace: istio-system
 spec:
+  match: destination.namespace == "secured-api"
   actions:
   - handler: authzhandler.istio-system
     instances:

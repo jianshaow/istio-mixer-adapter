@@ -1,6 +1,6 @@
 # istio-mixer-authz-adapter
 
-First of all, get go environment ready.
+First of all, get go environment ready, and docker, kubernetes, istio as well.
 
 ~~~ shell
 cd /tmp
@@ -55,4 +55,35 @@ kubectl apply -f authzadapter/testdata/template.yaml
 kubectl apply -f $MIXER_REPO/adapter/authzadapter/config/authzadapter.yaml
 kubectl apply -f authzadapter/testdata/sample_operator_cfg.yaml
 
+kubectl create ns secured-api
+kubectl create ns insecure-api
+kubectl label namespace secured-api istio-injection=enabled
+kubectl label namespace insecure-api istio-injection=enabled
+
+kubectl apply -f $ISTIO/istio/samples/httpbin/httpbin.yaml -n secured-api
+kubectl apply -f $ISTIO/istio/samples/httpbin/httpbin.yaml -n insecure-api
+
+# access secured httpbin
+curl -i -X POST \
+   -H "Authorization:Basic dGVzdENsaWVudDpzZWNyZXQ=" \
+   -H "Content-Type:application/json" \
+   -H "x-client-priority:50" \
+   -d \
+'{
+  "message":"hello world!"
+}
+' \
+ 'http://$SECURED_HTTPBIN:8000/post'
+
+# access insecure httpbin
+curl -i -X POST \
+   -H "Authorization:Basic dGVzdENsaWVudDpzZWNyZXQ=" \
+   -H "Content-Type:application/json" \
+   -H "x-client-priority:50" \
+   -d \
+'{
+  "message":"hello world!"
+}
+' \
+ 'http://$INSECURE_HTTPBIN:8000/post'
 ~~~
