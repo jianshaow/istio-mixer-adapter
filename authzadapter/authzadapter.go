@@ -83,7 +83,7 @@ func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, r *authorization
 	priorityHeader := fmt.Sprintf("%v", subjectProps["priority_header"])
 
 	if priorityHeader != "" {
-		log.Infof("clientPriority: %v\n", priorityHeader)
+		log.Infof("requestPriority: %v\n", priorityHeader)
 	}
 
 	log.Infof("Action: %+v\n", *(r.Instance.Action))

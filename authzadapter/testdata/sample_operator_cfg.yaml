@@ -27,7 +27,7 @@ spec:
       user: source.principal | request.auth.principal | ""
       properties:
         authorization_header: request.headers["authorization"] | ""
-        priority_header: request.headers["x-client-priority"] | "100"
+        priority_header: request.headers["x-request-priority"] | "100"
     action:
       namespace: destination.namespace | "default"
       service: destination.service.host | ""
