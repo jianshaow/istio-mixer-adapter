@@ -10,6 +10,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 
 	"google.golang.org/grpc"
@@ -59,31 +60,49 @@ func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, r *authorization
 
 	authzHeader := fmt.Sprintf("%v", subjectProps["authorization_header"])
 
-	if authzHeader != "" {
-		headerParts := strings.Split(strings.TrimSpace(authzHeader), " ")
+	if authzHeader == "" {
+		log.Info("no authorization header")
+		return &v1beta1.CheckResult{
+			Status: status.WithUnauthenticated("no authorization header..."),
+		}, nil
+	}
 
-		if len(headerParts) >= 2 {
-			authzType := headerParts[0]
-			authzContent := headerParts[1]
-			log.Infof("authzContent: %v\n", authzContent)
+	headerParts := strings.Split(strings.TrimSpace(authzHeader), " ")
 
-			if authzType == "Basic" {
-				decoded, _ := base64.StdEncoding.DecodeString(authzContent)
-				log.Infof("decoded: %s\n", decoded)
-				basicAuthzParts := strings.Split(string(decoded), ":")
-				clientID := basicAuthzParts[0]
-				clientSecret := basicAuthzParts[1]
+	if len(headerParts) >= 2 {
+		authzType := headerParts[0]
+		authzContent := headerParts[1]
+		log.Infof("authzContent: %v\n", authzContent)
 
-				log.Infof("clientID: %v\n", clientID)
-				log.Infof("clientSecret: %v\n", clientSecret)
+		if authzType == "Basic" {
+			decoded, err := base64.StdEncoding.DecodeString(authzContent)
+			if err != nil {
+				log.Infof("wrong basic credential: %v\n", authzContent)
+				return &v1beta1.CheckResult{
+					Status: status.WithInvalidArgument("wrong basic credential..."),
+				}, nil
 			}
+			log.Infof("decoded: %s\n", decoded)
+			basicAuthzParts := strings.Split(string(decoded), ":")
+			clientID := basicAuthzParts[0]
+			clientSecret := basicAuthzParts[1]
+
+			log.Infof("clientID: %v\n", clientID)
+			log.Infof("clientSecret: %v\n", clientSecret)
 		}
 	}
 
 	priorityHeader := fmt.Sprintf("%v", subjectProps["priority_header"])
 
 	if priorityHeader != "" {
-		log.Infof("requestPriority: %v\n", priorityHeader)
+		priority, err := strconv.Atoi(priorityHeader)
+		if err != nil {
+			log.Infof("wrong priority: %v\n", priorityHeader)
+			return &v1beta1.CheckResult{
+				Status: status.WithInvalidArgument("Wrong priority header..."),
+			}, nil
+		}
+		log.Infof("requestPriority: %v\n", priority)
 	}
 
 	log.Infof("Action: %+v\n", *(r.Instance.Action))
