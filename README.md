@@ -26,8 +26,8 @@ go build $MIXER_REPO/adapter/authzadapter/
 
 cp $MIXER_REPO/adapter/authzadapter/config/authzadapter.yaml $MIXER_REPO/adapter/authzadapter/testdata/
 
-export ADDRESS=[::]:45678
-sed -e "s/{ADDRESS}/${ADDRESS}/g" /tmp/istio-mixer-authz-adapter/sample_operator_cfg.yaml > $MIXER_REPO/adapter/authzadapter/testdata/sample_operator_cfg.yaml
+export ADAPTER_HOST=[::]
+sed -e "s/{ADDRESS}/${ADAPTER_HOST}/g" /tmp/istio-mixer-authz-adapter/sample_operator_cfg.yaml > $MIXER_REPO/adapter/authzadapter/testdata/sample_operator_cfg.yaml
 
 go run $MIXER_REPO/adapter/authzadapter/cmd/main.go 45678
 
@@ -48,7 +48,7 @@ docker save -o authzadapter.tar mymixeradapter/authzadapter:1.0
 # load the image in the kubernetes cluster worker node
 docker load -i authzadapter.tar
 
-sed -e "s/{ADDRESS}/authzadapter-service/g" sample_operator_cfg.yaml > authzadapter/testdata/sample_operator_cfg.yaml
+sed -e "s/{ADAPTER_HOST}/authzadapter-service/g" sample_operator_cfg.yaml > authzadapter/testdata/sample_operator_cfg.yaml
 
 kubectl apply -f authzadapter-deployment.yaml
 kubectl apply -f authzadapter/testdata/template.yaml
