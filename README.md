@@ -29,7 +29,7 @@ go run $MIXER_REPO/adapter/authzadapter/cmd/main.go 45678
 
 $GOPATH/out/linux_amd64/release/mixs server --configStoreURL=fs://${MIXER_REPO}/adapter/authzadapter/testdata
 
-$GOPATH/out/linux_amd64/release/mixc check -s destination.service.host="testservice.svc.cluster.local",destination.namespace="test-namespace",request.path="/test",request.method="GET" --stringmap_attributes "request.headers=Authorization:Basic dGVzdENsaWVudDpzZWNyZXQ="
+$GOPATH/out/linux_amd64/release/mixc check -s destination.service.host="testservice.svc.cluster.local",destination.namespace="test-namespace",request.path="/test",request.method="GET" --stringmap_attributes "request.headers=Authorization:Basic dGVzdENsaWVudDpzZWNyZXQ=;x-client-priority:50"
 
 cd /tmp/istio-mixer-authz-adapter
 CGO_ENABLED=0 GOOS=linux go build -a -v -o bin/authzadapter $MIXER_REPO/adapter/authzadapter/cmd/main.go
