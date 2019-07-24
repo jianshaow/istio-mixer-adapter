@@ -37,12 +37,14 @@ CGO_ENABLED=0 GOOS=linux go build -a -v -o bin/authzadapter $MIXER_REPO/adapter/
 docker build -t mymixeradapter/authzadapter:1.0 .
 # in case the build docker is not the same with kubernetes cluster
 docker save -o authzadapter.tar mymixeradapter/authzadapter:1.0
+# switch to the docker environment of the kubernetes cluster worker node
+...
 # load the image in the kubernetes cluster worker node
 docker load -i authzadapter.tar
 
 kubectl apply -f authzadapter-deployment.yaml
-kubectl apply -f authzadapter/config/template.yaml
-kubectl apply -f authzadapter/config/authzadapter.yaml
-kubectl apply -f authzadapter/config/sample_operator_cfg.yaml
+kubectl apply -f authzadapter/testdata/template.yaml
+kubectl apply -f $MIXER_REPO/adapter/authzadapter/config/authzadapter.yaml
+kubectl apply -f authzadapter/testdata/sample_operator_cfg.yaml
 
 ~~~
