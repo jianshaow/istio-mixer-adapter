@@ -19,7 +19,7 @@ pushd $ISTIO/istio && make mixc
 cp /tmp/istio-mixer-authz-adapter/authzadapter $MIXER_REPO/adapter/ -r
 
 go generate $MIXER_REPO/adapter/authzadapter/
-# go generate needs docker, may need root privilege, if so, GOPATH need pass for sudo as following
+# go generate needs docker, may need root privilege, if so, GOPATH needs to be passed for sudo as following
 # sudo GOPATH=$GOPATH go generate $MIXER_REPO/adapter/authzadapter/
 go build $MIXER_REPO/adapter/authzadapter/
 
@@ -37,9 +37,12 @@ CGO_ENABLED=0 GOOS=linux go build -a -v -o bin/authzadapter $MIXER_REPO/adapter/
 docker build -t mymixeradapter/authzadapter:1.0 .
 # in case the build docker is not the same with kubernetes cluster
 docker save -o authzadapter.tar mymixeradapter/authzadapter:1.0
-# load in the kubernetes cluster worker node
+# load the image in the kubernetes cluster worker node
 docker load -i authzadapter.tar
 
-kubectl apply -f authzadapter.yaml
+kubectl apply -f authzadapter-deployment.yaml
+kubectl apply -f authzadapter/config/template.yaml
+kubectl apply -f authzadapter/config/authzadapter.yaml
+kubectl apply -f sample_operator_cfg.yaml
 
 ~~~
