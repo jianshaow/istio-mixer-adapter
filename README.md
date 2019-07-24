@@ -43,6 +43,6 @@ docker load -i authzadapter.tar
 kubectl apply -f authzadapter-deployment.yaml
 kubectl apply -f authzadapter/config/template.yaml
 kubectl apply -f authzadapter/config/authzadapter.yaml
-kubectl apply -f sample_operator_cfg.yaml
+kubectl apply -f authzadapter/config/sample_operator_cfg.yaml
 
 ~~~
