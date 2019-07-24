@@ -58,6 +58,7 @@ func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, r *authorization
 	log.Infof("AuthorizationHeader: %v\n", subjectProps["authorization_header"])
 
 	authzHeader := fmt.Sprintf("%v", subjectProps["authorization_header"])
+
 	if authzHeader != "" {
 		headerParts := strings.Split(strings.TrimSpace(authzHeader), " ")
 
@@ -77,6 +78,12 @@ func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, r *authorization
 				log.Infof("clientSecret: %v\n", clientSecret)
 			}
 		}
+	}
+
+	priorityHeader := fmt.Sprintf("%v", subjectProps["priority_header"])
+
+	if priorityHeader != "" {
+		log.Infof("clientPriority: %v\n", priorityHeader)
 	}
 
 	log.Infof("Action: %+v\n", *(r.Instance.Action))
