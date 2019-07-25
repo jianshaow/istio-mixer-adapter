@@ -66,26 +66,34 @@ func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, request *authori
 	context.authzInfo = &AuthzInfo{}
 	context.adapterConfig = &config.Params{}
 
-	err := parseAdapterConfig(context, *request)
+	err := parseAdapterConfig(context.adapterConfig, *request)
 	if err != nil {
 		return nil, err
 	}
 
-	authzInfoStatus := parseAuthzInfo(context, *request)
+	authzInfoStatus := parseAuthzInfo(context.authzInfo, *request)
 	if !status.IsOK(authzInfoStatus) {
 		return &v1beta1.CheckResult{
 			Status: authzInfoStatus,
 		}, nil
 	}
 
-	priorityStatus := parsePriority(context, *request)
+	priorityStatus := parsePriority(context.authzInfo, *request)
 	if !status.IsOK(priorityStatus) {
 		return &v1beta1.CheckResult{
 			Status: priorityStatus,
 		}, nil
 	}
 
-	log.Infof("AuthzContext: %+v", *context)
+	log.Infof("AdapterConfig: %+v", *context.adapterConfig)
+	log.Infof("AuthzInfo: %+v", *context.authzInfo)
+
+	policyStatus := checkPolicy(context)
+	if !status.IsOK(policyStatus) {
+		return &v1beta1.CheckResult{
+			Status: policyStatus,
+		}, nil
+	}
 
 	return &v1beta1.CheckResult{
 		Status: status.OK,
@@ -133,23 +141,19 @@ func NewAuthzAdapter(addr string) (Server, error) {
 	return s, nil
 }
 
-func parseAdapterConfig(context *AuthzContext, request authorization.HandleAuthorizationRequest) error {
+func parseAdapterConfig(cfg *config.Params, request authorization.HandleAuthorizationRequest) error {
 	if request.AdapterConfig != nil {
-		if err := context.adapterConfig.Unmarshal(request.AdapterConfig.Value); err != nil {
+		if err := cfg.Unmarshal(request.AdapterConfig.Value); err != nil {
 			log.Errorf("error unmarshalling adapter config: %v", err)
 			return err
 		}
 	}
 
-	log.Infof("AdapterConfig: %+v\n", *context.adapterConfig)
-
 	return nil
 }
 
-func parseAuthzInfo(context *AuthzContext, request authorization.HandleAuthorizationRequest) rpc.Status {
+func parseAuthzInfo(authzInfo *AuthzInfo, request authorization.HandleAuthorizationRequest) rpc.Status {
 	subjectProps := decodeValueMap(request.Instance.Subject.Properties)
-
-	log.Infof("AuthorizationHeader: %v\n", subjectProps["authorization_header"])
 
 	authzHeader := fmt.Sprintf("%v", subjectProps["authorization_header"])
 
@@ -163,11 +167,11 @@ func parseAuthzInfo(context *AuthzContext, request authorization.HandleAuthoriza
 	if len(headerParts) == 2 {
 		authzType := headerParts[0]
 		authzContent := headerParts[1]
-		log.Infof("authzContent: %v\n", authzContent)
+		log.Debugf("authzContent: %v\n", authzContent)
 
 		if authzType == "Basic" {
-			context.authzInfo.authzType = authzType
-			s := parsekBasicCredential(context.authzInfo, authzContent)
+			authzInfo.authzType = authzType
+			s := parsekBasicCredential(authzInfo, authzContent)
 			if !status.IsOK(s) {
 				return s
 			}
@@ -177,10 +181,10 @@ func parseAuthzInfo(context *AuthzContext, request authorization.HandleAuthoriza
 		return status.WithUnauthenticated("wrong authorization header...")
 	}
 
-	context.authzInfo.requstMethod = request.Instance.Action.Method
-	context.authzInfo.targetNamespace = request.Instance.Action.Namespace
-	context.authzInfo.targetPath = request.Instance.Action.Path
-	context.authzInfo.targetService = request.Instance.Action.Service
+	authzInfo.requstMethod = request.Instance.Action.Method
+	authzInfo.targetNamespace = request.Instance.Action.Namespace
+	authzInfo.targetPath = request.Instance.Action.Path
+	authzInfo.targetService = request.Instance.Action.Service
 
 	return status.OK
 }
@@ -192,7 +196,7 @@ func parsekBasicCredential(authzInfo *AuthzInfo, credential string) rpc.Status {
 		return status.WithInvalidArgument("Wrong basic credential...")
 	}
 
-	log.Infof("decoded: %s\n", decoded)
+	log.Debugf("decoded: %s\n", decoded)
 	basicAuthzParts := strings.Split(string(decoded), ":")
 	clientID := basicAuthzParts[0]
 	clientSecret := basicAuthzParts[1]
@@ -209,7 +213,11 @@ func authenticate(clientID string, clientSecret string) rpc.Status {
 	return status.OK
 }
 
-func parsePriority(context *AuthzContext, request authorization.HandleAuthorizationRequest) rpc.Status {
+func checkPolicy(context *AuthzContext) rpc.Status {
+	return status.OK
+}
+
+func parsePriority(authzInfo *AuthzInfo, request authorization.HandleAuthorizationRequest) rpc.Status {
 	actionProps := decodeValueMap(request.Instance.Action.Properties)
 
 	priorityHeader := fmt.Sprintf("%v", actionProps["priority_header"])
@@ -220,10 +228,9 @@ func parsePriority(context *AuthzContext, request authorization.HandleAuthorizat
 			log.Infof("wrong priority: %v\n", priorityHeader)
 			return status.WithInvalidArgument("Wrong priority header...")
 		}
-		log.Infof("requestPriority: %v\n", priority)
+		authzInfo.requestPriority = priority
 	}
 
-	log.Infof("Action: %+v\n", *(request.Instance.Action))
 	return status.OK
 }
 
