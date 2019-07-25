@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gogo/googleapis/google/rpc"
 	"google.golang.org/grpc"
 
 	"istio.io/api/mixer/adapter/model/v1beta1"
@@ -36,76 +37,55 @@ type (
 		listener net.Listener
 		server   *grpc.Server
 	}
+
+	// AuthzInfo for policy checking.
+	AuthzInfo struct {
+		clientID        string
+		authzType       string
+		targetNamespace string
+		targetService   string
+		targetPath      string
+		requstMethod    string
+		requestPriority int
+	}
+
+	// AuthzContext for policy checking.
+	AuthzContext struct {
+		authzInfo     *AuthzInfo
+		adapterConfig *config.Params
+	}
 )
 
 var _ authorization.HandleAuthorizationServiceServer = &AuthzAdapter{}
 
 // HandleAuthorization handler the request
-func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, r *authorization.HandleAuthorizationRequest) (*v1beta1.CheckResult, error) {
-	log.Infof("received request %v\n", *r)
+func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, request *authorization.HandleAuthorizationRequest) (*v1beta1.CheckResult, error) {
+	log.Infof("received request %v\n", *request)
 
-	cfg := &config.Params{}
+	context := &AuthzContext{}
+	context.authzInfo = &AuthzInfo{}
+	context.adapterConfig = &config.Params{}
 
-	if r.AdapterConfig != nil {
-		if err := cfg.Unmarshal(r.AdapterConfig.Value); err != nil {
-			log.Errorf("error unmarshalling adapter config: %v", err)
-			return nil, err
-		}
+	err := parseAdapterConfig(context, *request)
+	if err != nil {
+		return nil, err
 	}
 
-	log.Infof("Config: %+v\n", *cfg)
-
-	subjectProps := decodeValueMap(r.Instance.Subject.Properties)
-	log.Infof("AuthorizationHeader: %v\n", subjectProps["authorization_header"])
-
-	authzHeader := fmt.Sprintf("%v", subjectProps["authorization_header"])
-
-	if authzHeader == "" {
-		log.Info("no authorization header")
+	authzInfoStatus := parseAuthzInfo(context, *request)
+	if !status.IsOK(authzInfoStatus) {
 		return &v1beta1.CheckResult{
-			Status: status.WithUnauthenticated("no authorization header..."),
+			Status: authzInfoStatus,
 		}, nil
 	}
 
-	headerParts := strings.Split(strings.TrimSpace(authzHeader), " ")
-
-	if len(headerParts) >= 2 {
-		authzType := headerParts[0]
-		authzContent := headerParts[1]
-		log.Infof("authzContent: %v\n", authzContent)
-
-		if authzType == "Basic" {
-			decoded, err := base64.StdEncoding.DecodeString(authzContent)
-			if err != nil {
-				log.Infof("wrong basic credential: %v\n", authzContent)
-				return &v1beta1.CheckResult{
-					Status: status.WithInvalidArgument("wrong basic credential..."),
-				}, nil
-			}
-			log.Infof("decoded: %s\n", decoded)
-			basicAuthzParts := strings.Split(string(decoded), ":")
-			clientID := basicAuthzParts[0]
-			clientSecret := basicAuthzParts[1]
-
-			log.Infof("clientID: %v\n", clientID)
-			log.Infof("clientSecret: %v\n", clientSecret)
-		}
+	priorityStatus := parsePriority(context, *request)
+	if !status.IsOK(priorityStatus) {
+		return &v1beta1.CheckResult{
+			Status: priorityStatus,
+		}, nil
 	}
 
-	priorityHeader := fmt.Sprintf("%v", subjectProps["priority_header"])
-
-	if priorityHeader != "" {
-		priority, err := strconv.Atoi(priorityHeader)
-		if err != nil {
-			log.Infof("wrong priority: %v\n", priorityHeader)
-			return &v1beta1.CheckResult{
-				Status: status.WithInvalidArgument("Wrong priority header..."),
-			}, nil
-		}
-		log.Infof("requestPriority: %v\n", priority)
-	}
-
-	log.Infof("Action: %+v\n", *(r.Instance.Action))
+	log.Infof("AuthzContext: %+v", *context)
 
 	return &v1beta1.CheckResult{
 		Status: status.OK,
@@ -151,6 +131,100 @@ func NewAuthzAdapter(addr string) (Server, error) {
 	s.server = grpc.NewServer()
 	authorization.RegisterHandleAuthorizationServiceServer(s.server, s)
 	return s, nil
+}
+
+func parseAdapterConfig(context *AuthzContext, request authorization.HandleAuthorizationRequest) error {
+	if request.AdapterConfig != nil {
+		if err := context.adapterConfig.Unmarshal(request.AdapterConfig.Value); err != nil {
+			log.Errorf("error unmarshalling adapter config: %v", err)
+			return err
+		}
+	}
+
+	log.Infof("AdapterConfig: %+v\n", *context.adapterConfig)
+
+	return nil
+}
+
+func parseAuthzInfo(context *AuthzContext, request authorization.HandleAuthorizationRequest) rpc.Status {
+	subjectProps := decodeValueMap(request.Instance.Subject.Properties)
+
+	log.Infof("AuthorizationHeader: %v\n", subjectProps["authorization_header"])
+
+	authzHeader := fmt.Sprintf("%v", subjectProps["authorization_header"])
+
+	if authzHeader == "" {
+		log.Info("no authorization header")
+		return status.WithUnauthenticated("no authorization header...")
+	}
+
+	headerParts := strings.Split(strings.TrimSpace(authzHeader), " ")
+
+	if len(headerParts) == 2 {
+		authzType := headerParts[0]
+		authzContent := headerParts[1]
+		log.Infof("authzContent: %v\n", authzContent)
+
+		if authzType == "Basic" {
+			context.authzInfo.authzType = authzType
+			s := parsekBasicCredential(context.authzInfo, authzContent)
+			if !status.IsOK(s) {
+				return s
+			}
+		}
+	} else {
+		log.Infof("wrong authorization header: %v\n", authzHeader)
+		return status.WithUnauthenticated("wrong authorization header...")
+	}
+
+	context.authzInfo.requstMethod = request.Instance.Action.Method
+	context.authzInfo.targetNamespace = request.Instance.Action.Namespace
+	context.authzInfo.targetPath = request.Instance.Action.Path
+	context.authzInfo.targetService = request.Instance.Action.Service
+
+	return status.OK
+}
+
+func parsekBasicCredential(authzInfo *AuthzInfo, credential string) rpc.Status {
+	decoded, decodeErr := base64.StdEncoding.DecodeString(credential)
+	if decodeErr != nil {
+		log.Infof("wrong basic credential: %v, error: %v\n", credential, decodeErr)
+		return status.WithInvalidArgument("Wrong basic credential...")
+	}
+
+	log.Infof("decoded: %s\n", decoded)
+	basicAuthzParts := strings.Split(string(decoded), ":")
+	clientID := basicAuthzParts[0]
+	clientSecret := basicAuthzParts[1]
+	s := authenticate(clientID, clientSecret)
+	if !status.IsOK(s) {
+		return s
+	}
+	authzInfo.clientID = clientID
+
+	return status.OK
+}
+
+func authenticate(clientID string, clientSecret string) rpc.Status {
+	return status.OK
+}
+
+func parsePriority(context *AuthzContext, request authorization.HandleAuthorizationRequest) rpc.Status {
+	actionProps := decodeValueMap(request.Instance.Action.Properties)
+
+	priorityHeader := fmt.Sprintf("%v", actionProps["priority_header"])
+
+	if priorityHeader != "" {
+		priority, err := strconv.Atoi(priorityHeader)
+		if err != nil {
+			log.Infof("wrong priority: %v\n", priorityHeader)
+			return status.WithInvalidArgument("Wrong priority header...")
+		}
+		log.Infof("requestPriority: %v\n", priority)
+	}
+
+	log.Infof("Action: %+v\n", *(request.Instance.Action))
+	return status.OK
 }
 
 func decodeValue(in interface{}) interface{} {

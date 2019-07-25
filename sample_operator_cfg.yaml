@@ -26,12 +26,13 @@ spec:
       user: source.principal | request.auth.principal | ""
       properties:
         authorization_header: request.headers["authorization"] | ""
-        priority_header: request.headers["x-request-priority"] | "100"
     action:
       namespace: destination.namespace | "default"
       service: destination.service.host | ""
       path: request.path | "/"
       method: request.method | "post"
+      properties:
+        priority_header: request.headers["x-request-priority"] | "100"
 ---
 
 # rule to dispatch to handler authzhandler
