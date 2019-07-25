@@ -167,7 +167,7 @@ func parseAuthzInfo(authzInfo *AuthzInfo, request authorization.HandleAuthorizat
 	if len(headerParts) == 2 {
 		authzType := headerParts[0]
 		authzContent := headerParts[1]
-		log.Debugf("authzContent: %v\n", authzContent)
+		log.Debugf("authzContent: %v", authzContent)
 
 		if authzType == "Basic" {
 			authzInfo.authzType = authzType
@@ -177,7 +177,7 @@ func parseAuthzInfo(authzInfo *AuthzInfo, request authorization.HandleAuthorizat
 			}
 		}
 	} else {
-		log.Infof("wrong authorization header: %v\n", authzHeader)
+		log.Infof("wrong authorization header: %v", authzHeader)
 		return status.WithUnauthenticated("wrong authorization header...")
 	}
 
@@ -192,11 +192,11 @@ func parseAuthzInfo(authzInfo *AuthzInfo, request authorization.HandleAuthorizat
 func parsekBasicCredential(authzInfo *AuthzInfo, credential string) rpc.Status {
 	decoded, decodeErr := base64.StdEncoding.DecodeString(credential)
 	if decodeErr != nil {
-		log.Infof("wrong basic credential: %v, error: %v\n", credential, decodeErr)
+		log.Infof("wrong basic credential: %v, error: %v", credential, decodeErr)
 		return status.WithInvalidArgument("Wrong basic credential...")
 	}
 
-	log.Debugf("decoded: %s\n", decoded)
+	log.Debugf("decoded: %s", decoded)
 	basicAuthzParts := strings.Split(string(decoded), ":")
 	clientID := basicAuthzParts[0]
 	clientSecret := basicAuthzParts[1]
@@ -225,7 +225,7 @@ func parsePriority(authzInfo *AuthzInfo, request authorization.HandleAuthorizati
 	if priorityHeader != "" {
 		priority, err := strconv.Atoi(priorityHeader)
 		if err != nil {
-			log.Infof("wrong priority: %v\n", priorityHeader)
+			log.Infof("wrong priority: %v", priorityHeader)
 			return status.WithInvalidArgument("Wrong priority header...")
 		}
 		authzInfo.requestPriority = priority
