@@ -24,6 +24,7 @@ spec:
   params:
     subject:
       user: source.principal | request.auth.principal | ""
+      groups: request.auth.claims["groups"] | ""
       properties:
         authorization_header: request.headers["authorization"] | ""
     action:
