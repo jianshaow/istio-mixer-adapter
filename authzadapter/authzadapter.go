@@ -94,6 +94,8 @@ func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, request *authori
 			Status: policyStatus,
 		}, nil
 	}
+	// todo: consume a quota
+	ConsumeQuotaByClientId(context.authzInfo.clientID)
 
 	return &v1beta1.CheckResult{
 		Status: status.OK,
@@ -214,6 +216,15 @@ func authenticate(clientID string, clientSecret string) rpc.Status {
 }
 
 func checkPolicy(context *AuthzContext) rpc.Status {
+	authzInfo := context.authzInfo
+	clientId := authzInfo.clientID
+	priority := authzInfo.requestPriority
+	// todo: how to set address of common-service??
+	// todo: how to set quotaProperty??
+	err := CheckQuotaPolicy(clientId, priority)
+	if err != nil {
+		return status.WithError(err)
+	}
 	return status.OK
 }
 
