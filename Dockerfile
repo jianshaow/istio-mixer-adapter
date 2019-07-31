@@ -1,4 +1,4 @@
-from alpine:3.10.1
+FROM alpine:3.10.1
 
 COPY bin/authzadapter /usr/local/bin/
 
