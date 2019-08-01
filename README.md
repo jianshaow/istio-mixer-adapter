@@ -88,7 +88,7 @@ kubectl apply -f $ISTIO/istio/samples/httpbin/httpbin.yaml -n insecure-api
 curl -i -X POST \
    -H "Authorization:Basic dGVzdENsaWVudDpzZWNyZXQ=" \
    -H "Content-Type:application/json" \
-   -H "x-client-priority:50" \
+   -H "x-request-priority:50" \
    -d \
 '{
   "message":"hello world!"
@@ -100,7 +100,7 @@ curl -i -X POST \
 curl -i -X POST \
    -H "Authorization:Basic dGVzdENsaWVudDpzZWNyZXQ=" \
    -H "Content-Type:application/json" \
-   -H "x-client-priority:50" \
+   -H "x-request-priority:50" \
    -d \
 '{
   "message":"hello world!"

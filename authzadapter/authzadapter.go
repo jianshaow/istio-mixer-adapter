@@ -169,8 +169,8 @@ func parseAuthzInfo(authzInfo *AuthzInfo, request authorization.HandleAuthorizat
 		authzContent := headerParts[1]
 		log.Debugf("authzContent: %v", authzContent)
 
+		authzInfo.authzType = authzType
 		if authzType == "Basic" {
-			authzInfo.authzType = authzType
 			s := parsekBasicCredential(authzInfo, authzContent)
 			if !status.IsOK(s) {
 				return s
