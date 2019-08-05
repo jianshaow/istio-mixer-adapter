@@ -6,6 +6,7 @@ First of all, get go environment ready, and docker, kubernetes, istio as well.
 # checkout the adapter source code
 cd /tmp
 git clone https://github.com/JianshaoWu/istio-mixer-authz-adapter.git
+export AUTHZ_ADAPTER_REPO=/tmp/istio-mixer-authz-adapter
 
 # checkout istio source code
 mkdir -p $GOPATH/src/istio.io/ && \
@@ -21,8 +22,7 @@ pushd $ISTIO/istio && make mixs
 pushd $ISTIO/istio && make mixc
 
 # copy adapter source code into istio mixer repo
-cp /tmp/istio-mixer-authz-adapter/authzadapter $MIXER_REPO/adapter/ -r
-cd /tmp/istio-mixer-authz-adapter/
+cp $AUTHZ_ADAPTER_REPO/authzadapter $MIXER_REPO/adapter/ -r
 
 # generate config gRPC code
 go generate $MIXER_REPO/adapter/authzadapter/
@@ -35,7 +35,7 @@ cp $MIXER_REPO/adapter/authzadapter/config/authzadapter.yaml $MIXER_REPO/adapter
 
 # render the host for local test
 export ADAPTER_HOST=[::]
-sed -e "s/{ADAPTER_HOST}/${ADAPTER_HOST}/g" /tmp/istio-mixer-authz-adapter/sample_operator_cfg.yaml > $MIXER_REPO/adapter/authzadapter/testdata/sample_operator_cfg.yaml
+sed -e "s/{ADAPTER_HOST}/${ADAPTER_HOST}/g" sample_operator_cfg.yaml > $MIXER_REPO/adapter/authzadapter/testdata/sample_operator_cfg.yaml
 
 # start adapter for local test
 go run $MIXER_REPO/adapter/authzadapter/cmd/main.go 45678
@@ -54,8 +54,7 @@ $GOPATH/out/linux_amd64/release/mixc check -s destination.service.host="testserv
 ## real kubernetes cluster deployment
 
 # build binary
-cd /tmp/istio-mixer-authz-adapter
-CGO_ENABLED=0 GOOS=linux go build -a -v -o bin/authzadapter $MIXER_REPO/adapter/authzadapter/cmd/main.go
+CGO_ENABLED=0 GOOS=linux go build -a -v -o $AUTHZ_ADAPTER_REPO/authzadapter/bin/authzadapter $MIXER_REPO/adapter/authzadapter/cmd/main.go
 
 # build docker image
 docker build -t mymixeradapter/authzadapter:1.0 .
@@ -67,13 +66,13 @@ docker save -o authzadapter.tar mymixeradapter/authzadapter:1.0
 docker load -i authzadapter.tar
 
 # render the host for kubernetes deployment
-sed -e "s/{ADAPTER_HOST}/authzadapter-service/g" sample_operator_cfg.yaml > authzadapter/testdata/sample_operator_cfg.yaml
+sed -e "s/{ADAPTER_HOST}/authzadapter-service/g" $AUTHZ_ADAPTER_REPO/authzadapter/sample_operator_cfg.yaml > $AUTHZ_ADAPTER_REPO/authzadapter/authzadapter/testdata/sample_operator_cfg.yaml
 
 # create kubernetes resources
-kubectl apply -f authzadapter-deployment.yaml
-kubectl apply -f authzadapter/testdata/template.yaml
+kubectl apply -f $AUTHZ_ADAPTER_REPO/authzadapter/authzadapter-deployment.yaml
+kubectl apply -f $AUTHZ_ADAPTER_REPO/authzadapter/authzadapter/testdata/template.yaml
 kubectl apply -f $MIXER_REPO/adapter/authzadapter/config/authzadapter.yaml
-kubectl apply -f authzadapter/testdata/sample_operator_cfg.yaml
+kubectl apply -f $AUTHZ_ADAPTER_REPO/authzadapter/authzadapter/testdata/sample_operator_cfg.yaml
 
 # create test api
 kubectl create ns secured-api
@@ -83,6 +82,9 @@ kubectl label namespace insecure-api istio-injection=enabled
 
 kubectl apply -f $ISTIO/istio/samples/httpbin/httpbin.yaml -n secured-api
 kubectl apply -f $ISTIO/istio/samples/httpbin/httpbin.yaml -n insecure-api
+
+# run on minikube environment
+export SECURED_HTTPBIN=$(kubectl get service httpbin -n secured-api -o go-template='{{.spec.clusterIP}}')
 
 # access secured httpbin, adapter should get the policy check request
 curl -i -X POST \
@@ -95,6 +97,9 @@ curl -i -X POST \
 }
 ' \
  'http://$SECURED_HTTPBIN:8000/post'
+
+# run on minikube environment
+export INSECURE_HTTPBIN=$(kubectl get service httpbin -n insecure-api -o go-template='{{.spec.clusterIP}}')
 
 # access insecure httpbin, adapter should not get the policy check request
 curl -i -X POST \
