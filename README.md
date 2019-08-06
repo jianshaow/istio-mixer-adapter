@@ -59,7 +59,7 @@ $GOPATH/out/linux_amd64/release/mixc check -s destination.service.host="testserv
 CGO_ENABLED=0 GOOS=linux go build -a -v -o $AUTHZ_ADAPTER_REPO/bin/authzadapter $MIXER_REPO/adapter/authzadapter/cmd/main.go
 
 # build docker image
-docker build -t mymixeradapter/authzadapter:1.0 .
+docker build -t mymixeradapter/authzadapter:1.0 $AUTHZ_ADAPTER_REPO
 # in case the build docker environment is not the same with kubernetes cluster, and you don't want to push the image to remote repository
 docker save -o authzadapter.tar mymixeradapter/authzadapter:1.0
 # switch to the docker environment of the kubernetes cluster worker node
@@ -71,10 +71,10 @@ docker load -i authzadapter.tar
 sed -e "s/{ADAPTER_HOST}/authzadapter-service/g" $AUTHZ_ADAPTER_REPO/authzadapter/sample_operator_cfg.yaml > $AUTHZ_ADAPTER_REPO/authzadapter/authzadapter/testdata/sample_operator_cfg.yaml
 
 # create kubernetes resources
-kubectl apply -f $AUTHZ_ADAPTER_REPO/authzadapter/authzadapter-deployment.yaml
-kubectl apply -f $AUTHZ_ADAPTER_REPO/authzadapter/authzadapter/testdata/template.yaml
+kubectl apply -f $AUTHZ_ADAPTER_REPO/authzadapter-deployment.yaml
+kubectl apply -f $AUTHZ_ADAPTER_REPO/authzadapter/testdata/template.yaml
 kubectl apply -f $MIXER_REPO/adapter/authzadapter/config/authzadapter.yaml
-kubectl apply -f $AUTHZ_ADAPTER_REPO/authzadapter/authzadapter/testdata/sample_operator_cfg.yaml
+kubectl apply -f $AUTHZ_ADAPTER_REPO/authzadapter/testdata/sample_operator_cfg.yaml
 
 # create test api
 kubectl create ns secured-api
