@@ -42,12 +42,12 @@ sed -e "s/{ADAPTER_HOST}/${ADAPTER_HOST}/g" sample_operator_cfg.yaml > $MIXER_RE
 # start adapter for local test
 go run $MIXER_REPO/adapter/authzadapter/cmd/main.go 45678
 
-# start mixer server with specified config
+# start mixer server with specified config in another terminal
 $GOPATH/out/linux_amd64/release/mixs server --configStoreURL=fs://${MIXER_REPO}/adapter/authzadapter/testdata
 
 ## mixer client testing
 
-# namespace not match, adapter should not be sent the policy check request
+# run mixer client in another terminal, namespace not match, adapter should not be sent the policy check request
 $GOPATH/out/linux_amd64/release/mixc check -s destination.service.host="testservice.svc.cluster.local",destination.namespace="test-namespace",request.path="/test",request.method="GET" --stringmap_attributes "request.headers=authorization:Basic dGVzdENsaWVudDpzZWNyZXQ=;x-request-priority:50"
 
 # namesace match, adapter get the request
@@ -68,7 +68,7 @@ docker save -o authzadapter.tar mymixeradapter/authzadapter:1.0
 docker load -i authzadapter.tar
 
 # render the host for kubernetes deployment
-sed -e "s/{ADAPTER_HOST}/authzadapter-service/g" $AUTHZ_ADAPTER_REPO/authzadapter/sample_operator_cfg.yaml > $AUTHZ_ADAPTER_REPO/authzadapter/authzadapter/testdata/sample_operator_cfg.yaml
+sed -e "s/{ADAPTER_HOST}/authzadapter-service/g" $AUTHZ_ADAPTER_REPO/sample_operator_cfg.yaml > $AUTHZ_ADAPTER_REPO/authzadapter/testdata/sample_operator_cfg.yaml
 
 # create kubernetes resources
 kubectl apply -f $AUTHZ_ADAPTER_REPO/authzadapter-deployment.yaml
