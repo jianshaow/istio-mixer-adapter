@@ -56,7 +56,7 @@ $GOPATH/out/linux_amd64/release/mixc check -s destination.service.host="testserv
 ## real kubernetes cluster deployment
 
 # build binary
-CGO_ENABLED=0 GOOS=linux go build -a -v -o $AUTHZ_ADAPTER_REPO/authzadapter/bin/authzadapter $MIXER_REPO/adapter/authzadapter/cmd/main.go
+CGO_ENABLED=0 GOOS=linux go build -a -v -o $AUTHZ_ADAPTER_REPO/bin/authzadapter $MIXER_REPO/adapter/authzadapter/cmd/main.go
 
 # build docker image
 docker build -t mymixeradapter/authzadapter:1.0 .
