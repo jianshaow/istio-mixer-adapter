@@ -97,6 +97,8 @@ func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, request *authori
 
 	return &v1beta1.CheckResult{
 		Status: status.OK,
+		// if you want to disable envoy cache, uncomment below
+		// ValidUseCount: 1,
 	}, nil
 }
 
