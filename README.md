@@ -92,7 +92,7 @@ export SECURED_HTTPBIN=$(kubectl get service httpbin -n secured-api -o go-templa
 curl -i -X POST \
    -H "Authorization:Basic dGVzdENsaWVudDpzZWNyZXQ=" \
    -H "Content-Type:application/json" \
-   -H "x-request-priority:50" \
+   -H "X-Request-Priority:50" \
    -d \
 '{
   "message":"hello world!"
@@ -107,7 +107,7 @@ export INSECURE_HTTPBIN=$(kubectl get service httpbin -n insecure-api -o go-temp
 curl -i -X POST \
    -H "Authorization:Basic dGVzdENsaWVudDpzZWNyZXQ=" \
    -H "Content-Type:application/json" \
-   -H "x-request-priority:50" \
+   -H "X-Request-Priority:50" \
    -d \
 '{
   "message":"hello world!"
