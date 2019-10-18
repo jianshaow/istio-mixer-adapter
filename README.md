@@ -90,28 +90,26 @@ export SECURED_HTTPBIN=$(kubectl get service httpbin -n secured-api -o go-templa
 
 # access secured httpbin, adapter should get the policy check request
 curl -i -X POST \
-   -H "Authorization:Basic dGVzdENsaWVudDpzZWNyZXQ=" \
-   -H "Content-Type:application/json" \
-   -H "X-Request-Priority:50" \
-   -d \
+-H "Authorization:Basic dGVzdENsaWVudDpzZWNyZXQ=" \
+-H "Content-Type:application/json" \
+-H "X-Request-Priority:50" \
+-d \
 '{
   "message":"hello world!"
-}
-' \
- 'http://$SECURED_HTTPBIN:8000/post'
+}' \
+"http://$SECURED_HTTPBIN:8000/post"
 
 # run on minikube environment
 export INSECURE_HTTPBIN=$(kubectl get service httpbin -n insecure-api -o go-template='{{.spec.clusterIP}}')
 
 # access insecure httpbin, adapter should not get the policy check request
 curl -i -X POST \
-   -H "Authorization:Basic dGVzdENsaWVudDpzZWNyZXQ=" \
-   -H "Content-Type:application/json" \
-   -H "X-Request-Priority:50" \
-   -d \
+-H "Authorization:Basic dGVzdENsaWVudDpzZWNyZXQ=" \
+-H "Content-Type:application/json" \
+-H "X-Request-Priority:50" \
+-d \
 '{
   "message":"hello world!"
-}
-' \
- 'http://$INSECURE_HTTPBIN:8000/post'
+}' \
+"http://$INSECURE_HTTPBIN:8000/post"
 ~~~
