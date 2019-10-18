@@ -37,7 +37,7 @@ cp $MIXER_REPO/adapter/authzadapter/config/authzadapter.yaml $MIXER_REPO/adapter
 
 # render the host for local test
 export ADAPTER_HOST=[::]
-sed -e "s/{ADAPTER_HOST}/${ADAPTER_HOST}/g" sample_operator_cfg.yaml > $MIXER_REPO/adapter/authzadapter/testdata/sample_operator_cfg.yaml
+sed -e "s/{ADAPTER_HOST}/${ADAPTER_HOST}/g" $AUTHZ_ADAPTER_REPO/sample_operator_cfg.yaml > $MIXER_REPO/adapter/authzadapter/testdata/sample_operator_cfg.yaml
 
 # start adapter for local test
 go run $MIXER_REPO/adapter/authzadapter/cmd/main.go 45678
