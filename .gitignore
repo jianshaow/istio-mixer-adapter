@@ -12,3 +12,7 @@
 *.out
 *.code-workspace
 .vscode/
+authzadapter/config/*.html
+authzadapter/config/*.yaml
+authzadapter/config/*.pb.go
+authzadapter/config/*.proto_descriptor
