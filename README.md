@@ -6,28 +6,28 @@ First of all, get go environment ready, and docker, kubernetes, istio as well.
 # checkout the adapter source code
 cd /tmp
 git clone https://github.com/JianshaoWu/istio-mixer-authz-adapter.git
-export AUTHZ_ADAPTER_REPO=/tmp/istio-mixer-authz-adapter
 
 # checkout istio source code
-mkdir -p $GOPATH/src/istio.io/ && \
-cd $GOPATH/src/istio.io/  && \
 git clone https://github.com/istio/istio
-# base on 1.2.3
-git checkout 1.2.3
+# base on stable version
+cd istio
+git checkout 1.2.8
 
 # set the environment variable
-export ISTIO=$GOPATH/src/istio.io
-export MIXER_REPO=$GOPATH/src/istio.io/istio/mixer
+export GOPATH=/tmp/istio-mixer-authz-adapter
+export ISTIO_REPO=/tmp/istio
+export MIXER_REPO=$ISTIO_REPO/mixer
+
+cp -R $ISTIO_REPO/vendor $GOPATH/src/github.com/authzadapter/
+cp -R $ISTIO_REPO $GOPATH/src/github.com/authzadapter/vendor/istio.io/
+rm -rf $GOPATH/src/github.com/authzadapter/vendor/istio.io/istio/vendor
 
 # build mixer server and client
-pushd $ISTIO/istio && make mixs
-pushd $ISTIO/istio && make mixc
-
-# copy adapter source code into istio mixer repo
-cp $AUTHZ_ADAPTER_REPO/authzadapter $MIXER_REPO/adapter/ -r
+pushd $GOPATH/src/github.com/authzadapter/vendor/istio.io/istio && make mixs
+pushd $GOPATH/src/github.com/authzadapter/vendor/istio.io/istio && make mixc
 
 # generate config gRPC code
-go generate $MIXER_REPO/adapter/authzadapter/
+go generate $GOPATH/src/github.com/authzadapter/
 # go generate needs docker, may need root privilege, if so, GOPATH needs to be passed for sudo as following
 # sudo GOPATH=$GOPATH go generate $MIXER_REPO/adapter/authzadapter/
 go build $MIXER_REPO/adapter/authzadapter/

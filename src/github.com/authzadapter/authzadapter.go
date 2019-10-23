@@ -1,7 +1,7 @@
 // nolint:lll
 // Generates the authzadapter adapter's resource yaml. It contains the adapter's configuration, name,
 // supported template names (authorization in this case), and whether it is session or no-session based.
-//go:generate $REPO_ROOT/bin/mixer_codegen.sh -a mixer/adapter/authzadapter/config/config.proto -x "-s=false -n authzadapter -t authorization"
+//go:generate $ISTIO_REPO/bin/mixer_codegen.sh -a mixer/adapter/authzadapter/config/config.proto -x "-s=false -n authzadapter -t authorization"
 
 package authzadapter
 
