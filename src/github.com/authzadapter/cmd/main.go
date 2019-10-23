@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	authzadapter "istio.io/istio/mixer/adapter/authzadapter"
+	authzadapter "github.com/authzadapter"
 )
 
 func main() {
