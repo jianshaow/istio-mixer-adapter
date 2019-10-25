@@ -10,9 +10,15 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+# VSCode
 *.code-workspace
 .vscode/
+
+# prject specific
 authzadapter/config/*.html
 authzadapter/config/*.yaml
 authzadapter/config/*.pb.go
 authzadapter/config/*.proto_descriptor
+bin/
+testdate/
