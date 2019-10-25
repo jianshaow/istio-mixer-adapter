@@ -21,4 +21,4 @@ authzadapter/config/*.yaml
 authzadapter/config/*.pb.go
 authzadapter/config/*.proto_descriptor
 bin/
-testdate/
+testdata/
