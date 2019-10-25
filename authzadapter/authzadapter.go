@@ -1,7 +1,7 @@
 // nolint:lll
 // Generates the authzadapter adapter's resource yaml. It contains the adapter's configuration, name,
-// supported template names (authorization in this case), and whether it is session or no-session based.
-//go:generate $ISTIO_REPO/bin/mixer_codegen.sh -a mixer/adapter/authzadapter/config/config.proto -x "-s=false -n authzadapter -t authorization"
+// supported template names (metric in this case), and whether it is session or no-session based.
+//go:generate $GOPATH/src/istio.io/istio/bin/mixer_codegen.sh -a mixer/adapter/authzadapter/config/config.proto -x "-s=false -n authzadapter -t authorization"
 
 package authzadapter
 
@@ -13,12 +13,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gogo/googleapis/google/rpc"
 	"google.golang.org/grpc"
-	rpc "istio.io/gogo-genproto/googleapis/google/rpc"
 
-	"github.com/authzadapter/config"
 	"istio.io/api/mixer/adapter/model/v1beta1"
 	policy "istio.io/api/policy/v1beta1"
+	"istio.io/istio/mixer/adapter/authzadapter/config"
 	"istio.io/istio/mixer/pkg/status"
 	"istio.io/istio/mixer/template/authorization"
 	"istio.io/pkg/log"

@@ -3,47 +3,54 @@
 First of all, get go environment ready, and docker, kubernetes, istio as well.
 
 ~~~ shell
+export GOPATH=$HOME/go
+
 # checkout the adapter source code
 cd /tmp
 git clone https://github.com/JianshaoWu/istio-mixer-authz-adapter.git
+export AUTHZ_ADAPTER_REPO=/tmp/istio-mixer-authz-adapter
 
 # checkout istio source code
+mkdir -p $GOPATH/src/istio.io/ && \
+cd $GOPATH/src/istio.io/  && \
 git clone https://github.com/istio/istio
-# base on stable version
+# base on 1.2.3
 cd istio
 git checkout 1.2.8
 
 # set the environment variable
-export GOPATH=/tmp/istio-mixer-authz-adapter
-export ISTIO_REPO=/tmp/istio
-export MIXER_REPO=$ISTIO_REPO/mixer
-
-cp -R $ISTIO_REPO/vendor $GOPATH/src/github.com/authzadapter/
-cp -R $ISTIO_REPO $GOPATH/src/github.com/authzadapter/vendor/istio.io/
-rm -rf $GOPATH/src/github.com/authzadapter/vendor/istio.io/istio/vendor
+export ISTIO=$GOPATH/src/istio.io
+export MIXER_REPO=$GOPATH/src/istio.io/istio/mixer
 
 # build mixer server and client
-pushd $GOPATH/src/github.com/authzadapter/vendor/istio.io/istio && make mixs
-pushd $GOPATH/src/github.com/authzadapter/vendor/istio.io/istio && make mixc
+pushd $ISTIO/istio && make mixs
+pushd $ISTIO/istio && make mixc
+
+# copy adapter source code into istio mixer repo
+cp $AUTHZ_ADAPTER_REPO/authzadapter $MIXER_REPO/adapter/ -r
 
 # generate config gRPC code
-go generate $GOPATH/src/github.com/authzadapter/
+go generate $MIXER_REPO/adapter/authzadapter/
 # go generate needs docker, may need root privilege, if so, GOPATH needs to be passed for sudo as following
 # sudo GOPATH=$GOPATH go generate $MIXER_REPO/adapter/authzadapter/
 go build $MIXER_REPO/adapter/authzadapter/
 
 # copy generated adapter manifest
-cp $MIXER_REPO/adapter/authzadapter/config/authzadapter.yaml $MIXER_REPO/adapter/authzadapter/testdata/
+mkdir $AUTHZ_ADAPTER_REPO/testdata
+cp $MIXER_REPO/adapter/authzadapter/config/authzadapter.yaml $AUTHZ_ADAPTER_REPO/testdata/
+cp $MIXER_REPO/template/authorization/template.yaml $AUTHZ_ADAPTER_REPO/testdata/
+cp $MIXER_REPO/testdata/config/attributes.yaml $AUTHZ_ADAPTER_REPO/testdata/
+
 
 # render the host for local test
 export ADAPTER_HOST=[::]
-sed -e "s/{ADAPTER_HOST}/${ADAPTER_HOST}/g" $AUTHZ_ADAPTER_REPO/sample_operator_cfg.yaml > $MIXER_REPO/adapter/authzadapter/testdata/sample_operator_cfg.yaml
+sed -e "s/{ADAPTER_HOST}/${ADAPTER_HOST}/g" $AUTHZ_ADAPTER_REPO/sample_operator_cfg.yaml > $AUTHZ_ADAPTER_REPO/testdata/sample_operator_cfg.yaml
 
 # start adapter for local test
 go run $MIXER_REPO/adapter/authzadapter/cmd/main.go 45678
 
 # start mixer server with specified config in another terminal
-$GOPATH/out/linux_amd64/release/mixs server --configStoreURL=fs://${MIXER_REPO}/adapter/authzadapter/testdata
+$GOPATH/out/linux_amd64/release/mixs server --configStoreURL=fs://$AUTHZ_ADAPTER_REPO/testdata/
 
 ## mixer client testing
 
@@ -68,13 +75,13 @@ docker save -o authzadapter.tar mymixeradapter/authzadapter:1.0
 docker load -i authzadapter.tar
 
 # render the host for kubernetes deployment
-sed -e "s/{ADAPTER_HOST}/authzadapter-service/g" $AUTHZ_ADAPTER_REPO/sample_operator_cfg.yaml > $AUTHZ_ADAPTER_REPO/authzadapter/testdata/sample_operator_cfg.yaml
+sed -e "s/{ADAPTER_HOST}/authzadapter-service/g" $AUTHZ_ADAPTER_REPO/sample_operator_cfg.yaml > $AUTHZ_ADAPTER_REPO/testdata/sample_operator_cfg.yaml
 
 # create kubernetes resources
 kubectl apply -f $AUTHZ_ADAPTER_REPO/authzadapter-deployment.yaml
-kubectl apply -f $AUTHZ_ADAPTER_REPO/authzadapter/testdata/template.yaml
-kubectl apply -f $MIXER_REPO/adapter/authzadapter/config/authzadapter.yaml
-kubectl apply -f $AUTHZ_ADAPTER_REPO/authzadapter/testdata/sample_operator_cfg.yaml
+kubectl apply -f $AUTHZ_ADAPTER_REPO/testdata/template.yaml
+kubectl apply -f $AUTHZ_ADAPTER_REPO/testdata/authzadapter.yaml
+kubectl apply -f $AUTHZ_ADAPTER_REPO/testdata/sample_operator_cfg.yaml
 
 # create test api
 kubectl create ns secured-api
