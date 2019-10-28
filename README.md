@@ -14,7 +14,7 @@ export AUTHZ_ADAPTER_REPO=/tmp/istio-mixer-authz-adapter
 mkdir -p $GOPATH/src/istio.io/ && \
 cd $GOPATH/src/istio.io/  && \
 git clone https://github.com/istio/istio
-# base on 1.2.3
+# base on stable version
 cd istio
 git checkout 1.2.8
 
