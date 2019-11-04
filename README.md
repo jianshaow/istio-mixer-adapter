@@ -7,7 +7,7 @@ export GOPATH=$HOME/go
 
 # checkout the adapter source code
 cd /tmp
-git clone https://github.com/JianshaoWu/istio-mixer-authz-adapter.git
+git clone https://github.com/jianshaow/istio-mixer-authz-adapter.git
 export AUTHZ_ADAPTER_REPO=/tmp/istio-mixer-authz-adapter
 
 # checkout istio source code
