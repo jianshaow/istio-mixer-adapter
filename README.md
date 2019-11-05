@@ -18,7 +18,7 @@ cd $GOPATH/src/istio.io/  && \
 git clone https://github.com/istio/istio
 # base on stable version
 cd istio
-git checkout 1.2.8
+git checkout 1.2.9
 
 # set the environment variable
 export ISTIO=$GOPATH/src/istio.io
@@ -71,12 +71,12 @@ $GOPATH/out/linux_amd64/release/mixc check -s destination.service.host="testserv
 ## real kubernetes cluster deployment
 
 # build binary
-CGO_ENABLED=0 GOOS=linux go build -a -v -o $ADAPTER_REPO/bin/authzadapter $MIXER_REPO/adapter/authzadapter/cmd/main.go
+CGO_ENABLED=0 GOOS=linux go build -a -v -o $ADAPTER_REPO/authzadapter/bin/authzadapter $MIXER_REPO/adapter/authzadapter/cmd/main.go
 
 # build docker image
-docker build -t mymixeradapter/authzadapter:1.0 $ADAPTER_REPO/authzadapter
+docker build -t jianshao/authzadapter:0.1.0 $ADAPTER_REPO/authzadapter
 # in case the build docker environment is not the same with kubernetes cluster, and you don't want to push the image to remote repository
-docker save -o authzadapter.tar mymixeradapter/authzadapter:1.0
+docker save -o authzadapter.tar jianshao/authzadapter:0.1.0
 # switch to the docker environment of the kubernetes cluster worker node
 ...
 # load the image in the kubernetes cluster worker node
