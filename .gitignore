@@ -16,9 +16,9 @@
 .vscode/
 
 # prject specific
-authzadapter/config/*.html
-authzadapter/config/*.yaml
-authzadapter/config/*.pb.go
-authzadapter/config/*.proto_descriptor
-bin/
-testdata/
+**/config/*.html
+**/config/*.yaml
+**/config/*.pb.go
+**/config/*.proto_descriptor
+**/bin/
+**/testdata/

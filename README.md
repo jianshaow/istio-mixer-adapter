@@ -2,7 +2,7 @@
 
 First of all, get go environment ready, and docker, kubernetes, istio as well.
 
-## Prepare
+## Prepare Development Environment
 
 ~~~ shell
 export GOPATH=$HOME/go
@@ -32,6 +32,8 @@ pushd $ISTIO/istio && make mixc
 
 ## Authorization Adapter
 
+### Generate Code
+
 ~~~ shell
 
 # copy adapter source code into istio mixer repo
@@ -42,6 +44,12 @@ go generate $MIXER_REPO/adapter/authzadapter/
 # go generate needs docker, may need root privilege, if so, GOPATH needs to be passed for sudo as following
 # sudo GOPATH=$GOPATH go generate $MIXER_REPO/adapter/authzadapter/
 go build $MIXER_REPO/adapter/authzadapter/
+
+~~~
+
+### Test with Mixer Server & Client
+
+~~~ shell
 
 # copy generated adapter manifest
 mkdir $ADAPTER_REPO/authzadapter/testdata
@@ -60,15 +68,17 @@ go run $MIXER_REPO/adapter/authzadapter/cmd/main.go 45678
 # start mixer server with specified config in another terminal
 $GOPATH/out/linux_amd64/release/mixs server --configStoreURL=fs://$ADAPTER_REPO/authzadapter/testdata/
 
-## mixer client testing
-
 # run mixer client in another terminal, namespace not match, adapter should not be sent the policy check request
 $GOPATH/out/linux_amd64/release/mixc check -s destination.service.host="testservice.svc.cluster.local",destination.namespace="test-namespace",request.path="/test",request.method="GET" --stringmap_attributes "request.headers=authorization:Basic dGVzdENsaWVudDpzZWNyZXQ=;x-request-priority:50"
 
 # namesace match, adapter get the request
 $GOPATH/out/linux_amd64/release/mixc check -s destination.service.host="testservice.svc.cluster.local",destination.namespace="secured-api",request.path="/test",request.method="GET" --stringmap_attributes "request.headers=authorization:Basic dGVzdENsaWVudDpzZWNyZXQ=;x-request-priority:50"
 
-## real kubernetes cluster deployment
+~~~
+
+### Build Binary Execution and Docker Image
+
+~~~ shell
 
 # build binary
 CGO_ENABLED=0 GOOS=linux go build -a -v -o $ADAPTER_REPO/authzadapter/bin/authzadapter $MIXER_REPO/adapter/authzadapter/cmd/main.go
@@ -81,6 +91,12 @@ docker save -o authzadapter.tar jianshao/authzadapter:0.1.0
 ...
 # load the image in the kubernetes cluster worker node
 docker load -i authzadapter.tar
+
+~~~
+
+### Deploy on Kubernetes and Test
+
+~~~ shell
 
 # render the host for kubernetes deployment
 sed -e "s/{ADAPTER_HOST}/authzadapter-service/g" $ADAPTER_REPO/authzadapter/sample_operator_cfg.yaml > $ADAPTER_REPO/authzadapter/testdata/sample_operator_cfg.yaml
