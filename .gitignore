@@ -17,4 +17,5 @@
 
 # prject specific
 **/bin/
-**/testdata/
+**/testdata/*adapter.yaml
+**/testdata/sample_operator_cfg.yaml
