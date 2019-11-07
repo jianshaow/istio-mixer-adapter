@@ -16,9 +16,5 @@
 .vscode/
 
 # prject specific
-**/config/*.html
-**/config/*.yaml
-**/config/*.pb.go
-**/config/*.proto_descriptor
 **/bin/
 **/testdata/

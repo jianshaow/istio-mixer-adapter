@@ -18,7 +18,7 @@ import (
 
 	"istio.io/api/mixer/adapter/model/v1beta1"
 	policy "istio.io/api/policy/v1beta1"
-	"istio.io/istio/mixer/adapter/authzadapter/config"
+	"github.com/jianshaow/istio-mixer-adapter/authzadapter/config"
 	"istio.io/istio/mixer/pkg/status"
 	"istio.io/istio/mixer/template/authorization"
 	"istio.io/pkg/log"
