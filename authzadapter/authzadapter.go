@@ -14,11 +14,11 @@ import (
 	"strings"
 
 	"github.com/gogo/googleapis/google/rpc"
+	"github.com/jianshaow/istio-mixer-adapter/authzadapter/config"
 	"google.golang.org/grpc"
 
 	"istio.io/api/mixer/adapter/model/v1beta1"
 	policy "istio.io/api/policy/v1beta1"
-	"github.com/jianshaow/istio-mixer-adapter/authzadapter/config"
 	"istio.io/istio/mixer/pkg/status"
 	"istio.io/istio/mixer/template/authorization"
 	"istio.io/pkg/log"
