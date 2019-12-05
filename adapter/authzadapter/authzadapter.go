@@ -1,7 +1,7 @@
 // nolint:lll
 // Generates the authzadapter adapter's resource yaml. It contains the adapter's configuration, name,
-// supported template names (metric in this case), and whether it is session or no-session based.
-//go:generate $GOPATH/src/istio.io/istio/bin/mixer_codegen.sh -a mixer/adapter/authzadapter/config/config.proto -x "-s=false -n authzadapter -t authorization"
+// supported template names (enhencedauthz in this case), and whether it is session or no-session based.
+//go:generate $GOPATH/src/istio.io/istio/bin/mixer_codegen.sh -a mixer/adapter/authzadapter/config/config.proto -x "-s=false -n authzadapter -t enhencedauthz"
 
 package authzadapter
 
@@ -15,10 +15,10 @@ import (
 
 	"github.com/gogo/googleapis/google/rpc"
 	"github.com/jianshaow/istio-mixer-adapter/adapter/authzadapter/config"
-	authorization "github.com/jianshaow/istio-mixer-adapter/template/enhencedauthz"
+	"github.com/jianshaow/istio-mixer-adapter/template/enhencedauthz"
 	"google.golang.org/grpc"
 
-	"istio.io/api/mixer/adapter/model/v1beta1"
+	model "istio.io/api/mixer/adapter/model/v1beta1"
 	policy "istio.io/api/policy/v1beta1"
 	"istio.io/istio/mixer/pkg/status"
 	"istio.io/pkg/log"
@@ -32,7 +32,7 @@ type (
 		Run(shutdown chan error)
 	}
 
-	// AuthzAdapter supports authorization template.
+	// AuthzAdapter supports enhencedauthz template.
 	AuthzAdapter struct {
 		listener net.Listener
 		server   *grpc.Server
@@ -56,10 +56,10 @@ type (
 	}
 )
 
-var _ authorization.HandleEnhencedauthzServiceServer = &AuthzAdapter{}
+var _ enhencedauthz.HandleEnhencedauthzServiceServer = &AuthzAdapter{}
 
 // HandleEnhencedauthz handler the request
-func (s *AuthzAdapter) HandleEnhencedauthz(ctx context.Context, request *authorization.HandleEnhencedauthzRequest) (*authorization.HandleEnhencedauthzResponse, error) {
+func (s *AuthzAdapter) HandleEnhencedauthz(ctx context.Context, request *enhencedauthz.HandleEnhencedauthzRequest) (*enhencedauthz.HandleEnhencedauthzResponse, error) {
 	log.Infof("received request %v\n", *request)
 
 	context := &AuthzContext{}
@@ -89,14 +89,14 @@ func (s *AuthzAdapter) HandleEnhencedauthz(ctx context.Context, request *authori
 		return responseWithStatus(policyStatus), nil
 	}
 
-	return &authorization.HandleEnhencedauthzResponse{
-		Result: &v1beta1.CheckResult{
+	return &enhencedauthz.HandleEnhencedauthzResponse{
+		Result: &model.CheckResult{
 			Status: status.OK,
 			// if you want to disable envoy cache, uncomment below
 			ValidUseCount: 1,
 		},
-		Output: &authorization.OutputMsg{
-			ClientID: context.authzInfo.clientID,
+		Output: &enhencedauthz.OutputMsg{
+			ClientID:  context.authzInfo.clientID,
 			AuthzType: context.authzInfo.authzType,
 		},
 	}, nil
@@ -139,19 +139,19 @@ func NewAuthzAdapter(addr string) (Server, error) {
 	}
 	fmt.Printf("listening on \"%v\"\n", s.Addr())
 	s.server = grpc.NewServer()
-	authorization.RegisterHandleEnhencedauthzServiceServer(s.server, s)
+	enhencedauthz.RegisterHandleEnhencedauthzServiceServer(s.server, s)
 	return s, nil
 }
 
-func responseWithStatus(status rpc.Status) *authorization.HandleEnhencedauthzResponse {
-	return &authorization.HandleEnhencedauthzResponse{
-		Result: &v1beta1.CheckResult{
+func responseWithStatus(status rpc.Status) *enhencedauthz.HandleEnhencedauthzResponse {
+	return &enhencedauthz.HandleEnhencedauthzResponse{
+		Result: &model.CheckResult{
 			Status: status,
 		},
 	}
 }
 
-func parseAdapterConfig(cfg *config.Params, request authorization.HandleEnhencedauthzRequest) error {
+func parseAdapterConfig(cfg *config.Params, request enhencedauthz.HandleEnhencedauthzRequest) error {
 	if request.AdapterConfig != nil {
 		if err := cfg.Unmarshal(request.AdapterConfig.Value); err != nil {
 			log.Errorf("error unmarshalling adapter config: %v", err)
@@ -162,7 +162,7 @@ func parseAdapterConfig(cfg *config.Params, request authorization.HandleEnhenced
 	return nil
 }
 
-func parseAuthzInfo(authzInfo *AuthzInfo, request authorization.HandleEnhencedauthzRequest) rpc.Status {
+func parseAuthzInfo(authzInfo *AuthzInfo, request enhencedauthz.HandleEnhencedauthzRequest) rpc.Status {
 	subjectProps := decodeValueMap(request.Instance.Subject.Properties)
 
 	authzHeader := fmt.Sprintf("%v", subjectProps["authorization_header"])
@@ -227,7 +227,7 @@ func checkPolicy(context *AuthzContext) rpc.Status {
 	return status.OK
 }
 
-func parsePriority(authzInfo *AuthzInfo, request authorization.HandleEnhencedauthzRequest) rpc.Status {
+func parsePriority(authzInfo *AuthzInfo, request enhencedauthz.HandleEnhencedauthzRequest) rpc.Status {
 	actionProps := decodeValueMap(request.Instance.Action.Properties)
 
 	priorityHeader := fmt.Sprintf("%v", actionProps["priority_header"])
