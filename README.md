@@ -33,6 +33,7 @@ make mixc
 ~~~ shell
 
 # copy generated adapter manifest
+cp $ADAPTER_REPO/template/enhencedauthz/template.yaml $ADAPTER_REPO/authzadapter/testdata/
 cp $ADAPTER_REPO/authzadapter/config/authzadapter.yaml $ADAPTER_REPO/authzadapter/testdata/
 
 # render the host for local test
@@ -62,9 +63,11 @@ $GOPATH/out/linux_amd64/release/mixc check -s destination.service.host="testserv
 CGO_ENABLED=0 GOOS=linux go build -a -v -o $ADAPTER_REPO/authzadapter/bin/authzadapter $ADAPTER_REPO/authzadapter/cmd/main.go
 
 # build docker image
-docker build -t jianshao/authzadapter:0.1.1 $ADAPTER_REPO/authzadapter
+docker build -t jianshao/authzadapter:0.2.0 $ADAPTER_REPO/authzadapter
+docker push jianshao/authzadapter:0.2.0
+
 # in case the build docker environment is not the same with kubernetes cluster, and you don't want to push the image to remote repository
-docker save -o authzadapter.tar jianshao/authzadapter:0.1.1
+docker save -o authzadapter.tar jianshao/authzadapter:0.2.0
 # switch to the docker environment of the kubernetes cluster worker node
 ...
 # load the image in the kubernetes cluster worker node

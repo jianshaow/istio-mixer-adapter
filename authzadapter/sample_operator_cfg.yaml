@@ -13,14 +13,14 @@ spec:
     pdp_port: 8080
 ---
 
-# instance for template authorization
+# instance for template enhencedauthz
 apiVersion: "config.istio.io/v1alpha2"
 kind: instance
 metadata:
   name: icheck
   namespace: istio-system
 spec:
-  template: authorization
+  template: enhencedauthz
   params:
     subject:
       user: source.principal | request.auth.principal | ""
@@ -48,4 +48,12 @@ spec:
   - handler: authzhandler.istio-system
     instances:
     - icheck
+    name: h
+  requestHeaderOperations:
+  - name: x-client-id
+    values:
+    - h.output.authzContext["client-id"]
+  - name: x-authz-type
+    values:
+    - h.output.authzContext["authz-type"]
 ---

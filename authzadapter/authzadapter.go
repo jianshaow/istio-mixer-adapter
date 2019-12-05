@@ -15,12 +15,12 @@ import (
 
 	"github.com/gogo/googleapis/google/rpc"
 	"github.com/jianshaow/istio-mixer-adapter/authzadapter/config"
+	authorization "github.com/jianshaow/istio-mixer-adapter/template/enhencedauthz"
 	"google.golang.org/grpc"
 
 	"istio.io/api/mixer/adapter/model/v1beta1"
 	policy "istio.io/api/policy/v1beta1"
 	"istio.io/istio/mixer/pkg/status"
-	"istio.io/istio/mixer/template/authorization"
 	"istio.io/pkg/log"
 )
 
@@ -56,10 +56,10 @@ type (
 	}
 )
 
-var _ authorization.HandleAuthorizationServiceServer = &AuthzAdapter{}
+var _ authorization.HandleEnhencedauthzServiceServer = &AuthzAdapter{}
 
-// HandleAuthorization handler the request
-func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, request *authorization.HandleAuthorizationRequest) (*v1beta1.CheckResult, error) {
+// HandleEnhencedauthz handler the request
+func (s *AuthzAdapter) HandleEnhencedauthz(ctx context.Context, request *authorization.HandleEnhencedauthzRequest) (*authorization.HandleEnhencedauthzResponse, error) {
 	log.Infof("received request %v\n", *request)
 
 	context := &AuthzContext{}
@@ -73,16 +73,12 @@ func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, request *authori
 
 	authzInfoStatus := parseAuthzInfo(context.authzInfo, *request)
 	if !status.IsOK(authzInfoStatus) {
-		return &v1beta1.CheckResult{
-			Status: authzInfoStatus,
-		}, nil
+		return responseWithStatus(authzInfoStatus), nil
 	}
 
 	priorityStatus := parsePriority(context.authzInfo, *request)
 	if !status.IsOK(priorityStatus) {
-		return &v1beta1.CheckResult{
-			Status: priorityStatus,
-		}, nil
+		return responseWithStatus(priorityStatus), nil
 	}
 
 	log.Infof("AdapterConfig: %+v", *context.adapterConfig)
@@ -90,15 +86,18 @@ func (s *AuthzAdapter) HandleAuthorization(ctx context.Context, request *authori
 
 	policyStatus := checkPolicy(context)
 	if !status.IsOK(policyStatus) {
-		return &v1beta1.CheckResult{
-			Status: policyStatus,
-		}, nil
+		return responseWithStatus(policyStatus), nil
 	}
 
-	return &v1beta1.CheckResult{
-		Status: status.OK,
-		// if you want to disable envoy cache, uncomment below
-		// ValidUseCount: 1,
+	return &authorization.HandleEnhencedauthzResponse{
+		Result: &v1beta1.CheckResult{
+			Status: status.OK,
+			// if you want to disable envoy cache, uncomment below
+			// ValidUseCount: 1,
+		},
+		Output: &authorization.OutputMsg{
+			AuthzContext: map[string]string{"client-id": context.authzInfo.clientID, "authz-type": context.authzInfo.authzType},
+		},
 	}, nil
 }
 
@@ -139,11 +138,22 @@ func NewAuthzAdapter(addr string) (Server, error) {
 	}
 	fmt.Printf("listening on \"%v\"\n", s.Addr())
 	s.server = grpc.NewServer()
-	authorization.RegisterHandleAuthorizationServiceServer(s.server, s)
+	authorization.RegisterHandleEnhencedauthzServiceServer(s.server, s)
 	return s, nil
 }
 
-func parseAdapterConfig(cfg *config.Params, request authorization.HandleAuthorizationRequest) error {
+func responseWithStatus(status rpc.Status) *authorization.HandleEnhencedauthzResponse {
+	return &authorization.HandleEnhencedauthzResponse{
+		Result: &v1beta1.CheckResult{
+			Status: status,
+		},
+		Output: &authorization.OutputMsg{
+			AuthzContext: map[string]string{"x-client-key": "abcd"},
+		},
+	}
+}
+
+func parseAdapterConfig(cfg *config.Params, request authorization.HandleEnhencedauthzRequest) error {
 	if request.AdapterConfig != nil {
 		if err := cfg.Unmarshal(request.AdapterConfig.Value); err != nil {
 			log.Errorf("error unmarshalling adapter config: %v", err)
@@ -154,7 +164,7 @@ func parseAdapterConfig(cfg *config.Params, request authorization.HandleAuthoriz
 	return nil
 }
 
-func parseAuthzInfo(authzInfo *AuthzInfo, request authorization.HandleAuthorizationRequest) rpc.Status {
+func parseAuthzInfo(authzInfo *AuthzInfo, request authorization.HandleEnhencedauthzRequest) rpc.Status {
 	subjectProps := decodeValueMap(request.Instance.Subject.Properties)
 
 	authzHeader := fmt.Sprintf("%v", subjectProps["authorization_header"])
@@ -219,7 +229,7 @@ func checkPolicy(context *AuthzContext) rpc.Status {
 	return status.OK
 }
 
-func parsePriority(authzInfo *AuthzInfo, request authorization.HandleAuthorizationRequest) rpc.Status {
+func parsePriority(authzInfo *AuthzInfo, request authorization.HandleEnhencedauthzRequest) rpc.Status {
 	actionProps := decodeValueMap(request.Instance.Action.Properties)
 
 	priorityHeader := fmt.Sprintf("%v", actionProps["priority_header"])
