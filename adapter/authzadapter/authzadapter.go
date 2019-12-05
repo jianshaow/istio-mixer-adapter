@@ -14,7 +14,7 @@ import (
 	"strings"
 
 	"github.com/gogo/googleapis/google/rpc"
-	"github.com/jianshaow/istio-mixer-adapter/authzadapter/config"
+	"github.com/jianshaow/istio-mixer-adapter/adapter/authzadapter/config"
 	authorization "github.com/jianshaow/istio-mixer-adapter/template/enhencedauthz"
 	"google.golang.org/grpc"
 
@@ -93,10 +93,11 @@ func (s *AuthzAdapter) HandleEnhencedauthz(ctx context.Context, request *authori
 		Result: &v1beta1.CheckResult{
 			Status: status.OK,
 			// if you want to disable envoy cache, uncomment below
-			// ValidUseCount: 1,
+			ValidUseCount: 1,
 		},
 		Output: &authorization.OutputMsg{
-			AuthzContext: map[string]string{"client-id": context.authzInfo.clientID, "authz-type": context.authzInfo.authzType},
+			ClientID: context.authzInfo.clientID,
+			AuthzType: context.authzInfo.authzType,
 		},
 	}, nil
 }
@@ -146,9 +147,6 @@ func responseWithStatus(status rpc.Status) *authorization.HandleEnhencedauthzRes
 	return &authorization.HandleEnhencedauthzResponse{
 		Result: &v1beta1.CheckResult{
 			Status: status,
-		},
-		Output: &authorization.OutputMsg{
-			AuthzContext: map[string]string{"x-client-key": "abcd"},
 		},
 	}
 }

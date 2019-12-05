@@ -33,19 +33,19 @@ make mixc
 ~~~ shell
 
 # copy generated adapter manifest
-cp $ADAPTER_REPO/template/enhencedauthz/template.yaml $ADAPTER_REPO/authzadapter/testdata/
-cp $ADAPTER_REPO/authzadapter/config/authzadapter.yaml $ADAPTER_REPO/authzadapter/testdata/
+cp $ADAPTER_REPO/template/enhencedauthz/template.yaml $ADAPTER_REPO/adapter/authzadapter/testdata/
+cp $ADAPTER_REPO/adapter/authzadapter/config/authzadapter.yaml $ADAPTER_REPO/adapter/authzadapter/testdata/
 
 # render the host for local test
 export ADAPTER_HOST=[::]
-sed "s/{ADAPTER_HOST}/${ADAPTER_HOST}/g" $ADAPTER_REPO/authzadapter/sample_operator_cfg.yaml > $ADAPTER_REPO/authzadapter/testdata/sample_operator_cfg.yaml
+sed "s/{ADAPTER_HOST}/${ADAPTER_HOST}/g" $ADAPTER_REPO/adapter/authzadapter/sample_operator_cfg.yaml > $ADAPTER_REPO/adapter/authzadapter/testdata/sample_operator_cfg.yaml
 
 # start adapter for local test
 cd $ADAPTER_REPO
-go run $ADAPTER_REPO/authzadapter/cmd/main.go 45678
+go run $ADAPTER_REPO/adapter/authzadapter/cmd/main.go 45678
 
 # start mixer server with specified config in another terminal
-$GOPATH/out/linux_amd64/release/mixs server --configStoreURL=fs://$ADAPTER_REPO/authzadapter/testdata/
+$GOPATH/out/linux_amd64/release/mixs server --configStoreURL=fs://$ADAPTER_REPO/adapter/authzadapter/testdata/
 
 # run mixer client in another terminal, namespace not match, adapter should not be sent the policy check request
 $GOPATH/out/linux_amd64/release/mixc check -s destination.service.host="testservice.svc.cluster.local",destination.namespace="test-namespace",request.path="/test",request.method="GET" --stringmap_attributes "request.headers=authorization:Basic dGVzdENsaWVudDpzZWNyZXQ=;x-request-priority:50"
@@ -60,14 +60,14 @@ $GOPATH/out/linux_amd64/release/mixc check -s destination.service.host="testserv
 ~~~ shell
 
 # build binary
-CGO_ENABLED=0 GOOS=linux go build -a -v -o $ADAPTER_REPO/authzadapter/bin/authzadapter $ADAPTER_REPO/authzadapter/cmd/main.go
+CGO_ENABLED=0 GOOS=linux go build -a -v -o $ADAPTER_REPO/adapter/authzadapter/bin/authzadapter $ADAPTER_REPO/adapter/authzadapter/cmd/main.go
 
 # build docker image
-docker build -t jianshao/authzadapter:0.2.0 $ADAPTER_REPO/authzadapter
-docker push jianshao/authzadapter:0.2.0
+docker build -t jianshao/authzadapter:0.2.1 $ADAPTER_REPO/adapter/authzadapter
+docker push jianshao/authzadapter:0.2.1
 
 # in case the build docker environment is not the same with kubernetes cluster, and you don't want to push the image to remote repository
-docker save -o authzadapter.tar jianshao/authzadapter:0.2.0
+docker save -o authzadapter.tar jianshao/authzadapter:0.2.1
 # switch to the docker environment of the kubernetes cluster worker node
 ...
 # load the image in the kubernetes cluster worker node
@@ -80,13 +80,13 @@ docker load -i authzadapter.tar
 ~~~ shell
 
 # render the host for kubernetes deployment
-sed "s/{ADAPTER_HOST}/authzadapter-service/g" $ADAPTER_REPO/authzadapter/sample_operator_cfg.yaml > $ADAPTER_REPO/authzadapter/testdata/sample_operator_cfg.yaml
+sed "s/{ADAPTER_HOST}/authzadapter-service/g" $ADAPTER_REPO/adapter/authzadapter/sample_operator_cfg.yaml > $ADAPTER_REPO/adapter/authzadapter/testdata/sample_operator_cfg.yaml
 
 # create kubernetes resources
 kubectl apply -f $ADAPTER_REPO/install/authzadapter-deployment.yaml
-kubectl apply -f $ADAPTER_REPO/authzadapter/testdata/template.yaml
-kubectl apply -f $ADAPTER_REPO/authzadapter/testdata/authzadapter.yaml
-kubectl apply -f $ADAPTER_REPO/authzadapter/testdata/sample_operator_cfg.yaml
+kubectl apply -f $ADAPTER_REPO/adapter/authzadapter/testdata/template.yaml
+kubectl apply -f $ADAPTER_REPO/adapter/authzadapter/testdata/authzadapter.yaml
+kubectl apply -f $ADAPTER_REPO/adapter/authzadapter/testdata/sample_operator_cfg.yaml
 
 # create test api
 kubectl create ns secured-api

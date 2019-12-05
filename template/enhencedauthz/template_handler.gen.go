@@ -22,33 +22,67 @@ import (
 	"istio.io/istio/mixer/pkg/adapter"
 )
 
+// The `enhencedauthz` template defines parameters for performing policy
+// enforcement within Istio. It is primarily concerned with enabling Mixer
+
 // Fully qualified name of the template
 const TemplateName = "enhencedauthz"
 
 // Instance is constructed by Mixer for the 'enhencedauthz' template.
+//
+// The `enhencedauthz` template defines parameters for performing policy
+// enforcement within Istio. It is primarily concerned with enabling Mixer
+// adapters to make decisions about who is allowed to do what.
+// In this template, the "who" is defined in a Subject message. The "what" is
+// defined in an Action message. During a Mixer Check call, these values
+// will be populated based on configuration from request attributes and
+// passed to individual authorization adapters to adjudicate.
 type Instance struct {
 	// Name of the instance as specified in configuration.
 	Name string
 
+	// A subject contains a list of attributes that identify
+	// the caller identity.
 	Subject *Subject
 
+	// An action defines "how a resource is accessed".
 	Action *Action
 }
 
 // Output struct is returned by the attribute producing adapters that handle this template.
+//
+// The `enhencedauthz` output template defines authoriztion context information will be
+// returned to mixer, those can be used in rule.
 type Output struct {
 	fieldsSet map[string]bool
 
-	AuthzContext map[string]string
+	// The clientID the ID of the client call the service.
+	ClientID string
+
+	// The AuthzType the type of authorization in header.
+	AuthzType string
+
+	// A authzContext contains authorization related informations.
+	Properties map[string]string
 }
 
 func NewOutput() *Output {
 	return &Output{fieldsSet: make(map[string]bool)}
 }
 
-func (o *Output) SetAuthzContext(val map[string]string) {
-	o.fieldsSet["authzContext"] = true
-	o.AuthzContext = val
+func (o *Output) SetClientID(val string) {
+	o.fieldsSet["clientID"] = true
+	o.ClientID = val
+}
+
+func (o *Output) SetAuthzType(val string) {
+	o.fieldsSet["authzType"] = true
+	o.AuthzType = val
+}
+
+func (o *Output) SetProperties(val map[string]string) {
+	o.fieldsSet["properties"] = true
+	o.Properties = val
 }
 
 func (o *Output) WasSet(field string) bool {
@@ -56,23 +90,39 @@ func (o *Output) WasSet(field string) bool {
 	return found
 }
 
+// A subject contains a list of attributes that identify
+// the caller identity.
 type Subject struct {
+
+	// The user name/ID that the subject represents.
 	User string
 
+	// Groups the subject belongs to depending on the authentication mechanism,
+	// "groups" are normally populated from JWT claim or client certificate.
+	// The operator can define how it is populated when creating an instance of
+	// the template.
 	Groups string
 
+	// Additional attributes about the subject.
 	Properties map[string]interface{}
 }
 
+// An action defines "how a resource is accessed".
 type Action struct {
+
+	// Namespace the target action is taking place in.
 	Namespace string
 
+	// The Service the action is being taken on.
 	Service string
 
+	// What action is being taken.
 	Method string
 
+	// HTTP REST path within the service
 	Path string
 
+	// Additional data about the action for use in policy.
 	Properties map[string]interface{}
 }
 

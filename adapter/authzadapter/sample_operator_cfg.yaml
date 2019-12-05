@@ -17,7 +17,7 @@ spec:
 apiVersion: "config.istio.io/v1alpha2"
 kind: instance
 metadata:
-  name: icheck
+  name: authzinstance
   namespace: istio-system
 spec:
   template: enhencedauthz
@@ -47,13 +47,13 @@ spec:
   actions:
   - handler: authzhandler.istio-system
     instances:
-    - icheck
-    name: h
+    - authzinstance
+    name: authzhandler
   requestHeaderOperations:
   - name: x-client-id
     values:
-    - h.output.authzContext["client-id"]
+    - authzhandler.output.clientID
   - name: x-authz-type
     values:
-    - h.output.authzContext["authz-type"]
+    - authzhandler.output.authzType
 ---

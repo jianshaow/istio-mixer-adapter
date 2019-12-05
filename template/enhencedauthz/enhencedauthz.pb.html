@@ -4,8 +4,13 @@ layout: protoc-gen-docs
 generator: protoc-gen-docs
 number_of_entries: 4
 ---
+<p>The <code>enhencedauthz</code> template defines parameters for performing policy
+enforcement within Istio. It is primarily concerned with enabling Mixer</p>
+
 <h2 id="Action">Action</h2>
 <section>
+<p>An action defines &ldquo;how a resource is accessed&rdquo;.</p>
+
 <table class="message-fields">
 <thead>
 <tr>
@@ -19,30 +24,40 @@ number_of_entries: 4
 <td><code>namespace</code></td>
 <td><code>string</code></td>
 <td>
+<p>Namespace the target action is taking place in.</p>
+
 </td>
 </tr>
 <tr id="Action-service">
 <td><code>service</code></td>
 <td><code>string</code></td>
 <td>
+<p>The Service the action is being taken on.</p>
+
 </td>
 </tr>
 <tr id="Action-method">
 <td><code>method</code></td>
 <td><code>string</code></td>
 <td>
+<p>What action is being taken.</p>
+
 </td>
 </tr>
 <tr id="Action-path">
 <td><code>path</code></td>
 <td><code>string</code></td>
 <td>
+<p>HTTP REST path within the service</p>
+
 </td>
 </tr>
 <tr id="Action-properties">
 <td><code>properties</code></td>
 <td><code>map&lt;string,&nbsp;<a href="https://istio.io/docs/reference/config/policy-and-telemetry/istio.policy.v1beta1.html#Value">istio.policy.v1beta1.Value</a>&gt;</code></td>
 <td>
+<p>Additional data about the action for use in policy.</p>
+
 </td>
 </tr>
 </tbody>
@@ -50,6 +65,9 @@ number_of_entries: 4
 </section>
 <h2 id="OutputTemplate">OutputTemplate</h2>
 <section>
+<p>The <code>enhencedauthz</code> output template defines authoriztion context information will be
+returned to mixer, those can be used in rule.</p>
+
 <table class="message-fields">
 <thead>
 <tr>
@@ -59,10 +77,28 @@ number_of_entries: 4
 </tr>
 </thead>
 <tbody>
-<tr id="OutputTemplate-authzContext">
-<td><code>authzContext</code></td>
+<tr id="OutputTemplate-clientID">
+<td><code>clientID</code></td>
+<td><code>string</code></td>
+<td>
+<p>The clientID the ID of the client call the service.</p>
+
+</td>
+</tr>
+<tr id="OutputTemplate-authzType">
+<td><code>authzType</code></td>
+<td><code>string</code></td>
+<td>
+<p>The AuthzType the type of authorization in header.</p>
+
+</td>
+</tr>
+<tr id="OutputTemplate-properties">
+<td><code>properties</code></td>
 <td><code>map&lt;string,&nbsp;string&gt;</code></td>
 <td>
+<p>A authzContext contains authorization related informations.</p>
+
 </td>
 </tr>
 </tbody>
@@ -70,6 +106,9 @@ number_of_entries: 4
 </section>
 <h2 id="Subject">Subject</h2>
 <section>
+<p>A subject contains a list of attributes that identify
+the caller identity.</p>
+
 <table class="message-fields">
 <thead>
 <tr>
@@ -83,18 +122,27 @@ number_of_entries: 4
 <td><code>user</code></td>
 <td><code>string</code></td>
 <td>
+<p>The user name/ID that the subject represents.</p>
+
 </td>
 </tr>
 <tr id="Subject-groups">
 <td><code>groups</code></td>
 <td><code>string</code></td>
 <td>
+<p>Groups the subject belongs to depending on the authentication mechanism,
+&ldquo;groups&rdquo; are normally populated from JWT claim or client certificate.
+The operator can define how it is populated when creating an instance of
+the template.</p>
+
 </td>
 </tr>
 <tr id="Subject-properties">
 <td><code>properties</code></td>
 <td><code>map&lt;string,&nbsp;<a href="https://istio.io/docs/reference/config/policy-and-telemetry/istio.policy.v1beta1.html#Value">istio.policy.v1beta1.Value</a>&gt;</code></td>
 <td>
+<p>Additional attributes about the subject.</p>
+
 </td>
 </tr>
 </tbody>
@@ -102,6 +150,14 @@ number_of_entries: 4
 </section>
 <h2 id="Template">Template</h2>
 <section>
+<p>The <code>enhencedauthz</code> template defines parameters for performing policy
+enforcement within Istio. It is primarily concerned with enabling Mixer
+adapters to make decisions about who is allowed to do what.
+In this template, the &ldquo;who&rdquo; is defined in a Subject message. The &ldquo;what&rdquo; is
+defined in an Action message. During a Mixer Check call, these values
+will be populated based on configuration from request attributes and
+passed to individual authorization adapters to adjudicate.</p>
+
 <table class="message-fields">
 <thead>
 <tr>
@@ -115,12 +171,17 @@ number_of_entries: 4
 <td><code>subject</code></td>
 <td><code><a href="#Subject">Subject</a></code></td>
 <td>
+<p>A subject contains a list of attributes that identify
+the caller identity.</p>
+
 </td>
 </tr>
 <tr id="Template-action">
 <td><code>action</code></td>
 <td><code><a href="#Action">Action</a></code></td>
 <td>
+<p>An action defines &ldquo;how a resource is accessed&rdquo;.</p>
+
 </td>
 </tr>
 </tbody>

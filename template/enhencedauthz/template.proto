@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+// The `enhencedauthz` template defines parameters for performing policy
+// enforcement within Istio. It is primarily concerned with enabling Mixer
 package enhencedauthz;
 
 import "policy/v1beta1/type.proto";
@@ -7,25 +9,56 @@ import "mixer/adapter/model/v1beta1/extensions.proto";
 
 option (istio.mixer.adapter.model.v1beta1.template_variety) = TEMPLATE_VARIETY_CHECK_WITH_OUTPUT;
 
+// A subject contains a list of attributes that identify
+// the caller identity.
 message Subject {
+  // The user name/ID that the subject represents.
   string user = 1;
+  // Groups the subject belongs to depending on the authentication mechanism,
+  // "groups" are normally populated from JWT claim or client certificate.
+  // The operator can define how it is populated when creating an instance of
+  // the template.
   string groups = 2;
+  // Additional attributes about the subject.
   map<string, istio.policy.v1beta1.Value> properties = 3;
 }
 
+// An action defines "how a resource is accessed".
 message Action {
+  // Namespace the target action is taking place in.
   string namespace = 1;
+  // The Service the action is being taken on.
   string service = 2;
+  // What action is being taken.
   string method = 3;
+  // HTTP REST path within the service
   string path = 4;
+  // Additional data about the action for use in policy.
   map<string, istio.policy.v1beta1.Value> properties = 5;
 }
 
+// The `enhencedauthz` template defines parameters for performing policy
+// enforcement within Istio. It is primarily concerned with enabling Mixer
+// adapters to make decisions about who is allowed to do what.
+// In this template, the "who" is defined in a Subject message. The "what" is
+// defined in an Action message. During a Mixer Check call, these values
+// will be populated based on configuration from request attributes and
+// passed to individual authorization adapters to adjudicate.
 message Template {
+  // A subject contains a list of attributes that identify
+  // the caller identity.
   Subject subject = 1;
+  // An action defines "how a resource is accessed".
   Action action = 2;
 }
 
+// The `enhencedauthz` output template defines authoriztion context information will be
+// returned to mixer, those can be used in rule.
 message OutputTemplate {
-    map<string, string> authzContext = 5;
+    // The clientID the ID of the client call the service.
+    string clientID = 1;
+    // The AuthzType the type of authorization in header.
+    string authzType = 2;
+    // A authzContext contains authorization related informations.
+    map<string, string> properties = 3;
 }
