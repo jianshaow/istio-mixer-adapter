@@ -1,8 +1,8 @@
 # Authorization Adapter Config
 
-## Generation gRPC Code
+## Generation Protobuf Code
 
-The gRPC code is already generated and commit to repository, you don't need to do this again. The following just shows how to do this.
+The protobuf code is already generated and commit to repository, you don't need to do this again. The following just shows how to do this.
 
 ~~~ shell
 
