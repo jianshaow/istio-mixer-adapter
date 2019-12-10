@@ -18,11 +18,31 @@ export ISTIO=/tmp/istio
 
 cd $ISTIO
 # base on stable version
-git checkout 1.2.9
+git checkout 1.4.1
 
 # build mixer server and client
 make mixs
 make mixc
+
+~~~
+
+## Generation Protobuf Code
+
+The protobuf code is already generated and commit to repository, you don't need to do this again. The following just shows how to do this.
+
+~~~ shell
+
+# copy proto file to istio repo
+cp $ADAPTER_REPO/template/enhencedauthz $ISTIO/mixer/template/ 
+cp $ADAPTER_REPO/adapter/authzadapter $ISTIO/mixer/adapter/
+
+# generate code
+cd $ISTIO
+sudo BUILD_WITH_CONTAINER=1 make gen
+
+# copy generated code back to the adapter repo
+cp $ISTIO/mixer/template/enhencedauthz/* $ADAPTER_REPO/template/enhencedauthz/
+cp $ISTIO/mixer/adapter/authzadapter/config/* $ADAPTER_REPO/adapter/authzadapter/config/
 
 ~~~
 
@@ -63,11 +83,11 @@ $GOPATH/out/linux_amd64/release/mixc check -s destination.service.host="testserv
 CGO_ENABLED=0 GOOS=linux go build -a -v -o $ADAPTER_REPO/adapter/authzadapter/bin/authzadapter $ADAPTER_REPO/adapter/authzadapter/cmd/main.go
 
 # build docker image
-docker build -t jianshao/authzadapter:0.2.1 $ADAPTER_REPO/adapter/authzadapter
-docker push jianshao/authzadapter:0.2.1
+docker build -t jianshao/authzadapter:0.3.0 $ADAPTER_REPO/adapter/authzadapter
+docker push jianshao/authzadapter:0.3.0
 
 # in case the build docker environment is not the same with kubernetes cluster, and you don't want to push the image to remote repository
-docker save -o authzadapter.tar jianshao/authzadapter:0.2.1
+docker save -o authzadapter.tar jianshao/authzadapter:0.3.0
 # switch to the docker environment of the kubernetes cluster worker node
 ...
 # load the image in the kubernetes cluster worker node
