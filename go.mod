@@ -3,7 +3,6 @@ module github.com/jianshaow/istio-mixer-adapter
 go 1.13
 
 require (
-	github.com/gogo/googleapis v1.1.0
 	github.com/gogo/protobuf v1.3.0
 	google.golang.org/grpc v1.24.0
 	istio.io/api v0.0.0-20191115173247-e1a1952e5b81
